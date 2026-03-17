@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -31,18 +33,50 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:guru')
         ->name('guru.dashboard');
 
-    Route::post('/guru/subjects', [DashboardController::class, 'storeSubject'])
+    Route::get('/guru/subjects/create', [SubjectController::class, 'create'])
+        ->middleware('role:guru')
+        ->name('guru.subjects.create');
+
+    Route::post('/guru/subjects', [SubjectController::class, 'store'])
         ->middleware('role:guru')
         ->name('guru.subjects.store');
 
-    Route::get('/subjects/{subject}', [DashboardController::class, 'showSubject'])
+    Route::get('/subjects/{subject}', [SubjectController::class, 'show'])
         ->whereNumber('subject')
         ->name('subjects.show');
 
-    Route::post('/guru/subjects/{subject}/materials', [DashboardController::class, 'storeMaterial'])
+    Route::get('/subjects/{subject}/materials/create', [MaterialController::class, 'create'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->name('guru.subjects.materials.create');
+
+    Route::post('/subjects/{subject}/materials', [MaterialController::class, 'store'])
         ->middleware('role:guru')
         ->whereNumber('subject')
         ->name('guru.subjects.materials.store');
+
+    Route::get('/subjects/{subject}/materials/{material}', [MaterialController::class, 'show'])
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('materials.show');
+
+    Route::get('/subjects/{subject}/materials/{material}/edit', [MaterialController::class, 'edit'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('guru.materials.edit');
+
+    Route::put('/subjects/{subject}/materials/{material}', [MaterialController::class, 'update'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('guru.materials.update');
+
+    Route::delete('/subjects/{subject}/materials/{material}', [MaterialController::class, 'destroy'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('guru.materials.destroy');
 
     Route::get('/siswa/dashboard', [DashboardController::class, 'siswa'])
         ->middleware('role:siswa')

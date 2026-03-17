@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Material;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -136,12 +137,14 @@ class AuthLoginTest extends TestCase
             'kelas' => null,
         ]);
 
-        $response = $this->actingAs($guru)->post('/guru/subjects', [
+        $response = $this->actingAs($guru)->post(route('guru.subjects.store'), [
             'name' => 'Kimia',
             'kelas' => '10',
         ]);
 
-        $response->assertRedirect(route('guru.dashboard'));
+        $subject = Subject::query()->where('name', 'Kimia')->firstOrFail();
+
+        $response->assertRedirect(route('subjects.show', $subject));
         $response->assertSessionHas('success');
         $this->assertDatabaseHas('subjects', [
             'name' => 'Kimia',
@@ -171,7 +174,9 @@ class AuthLoginTest extends TestCase
             'file' => UploadedFile::fake()->create('bab-1.pdf', 100, 'application/pdf'),
         ]);
 
-        $response->assertRedirect(route('subjects.show', $subject));
+        $material = Material::query()->where('subject_id', $subject->id)->where('title', 'Bab 1')->firstOrFail();
+
+        $response->assertRedirect(route('materials.show', [$subject, $material]));
         $response->assertSessionHas('success');
         $this->assertDatabaseHas('materials', [
             'subject_id' => $subject->id,
@@ -193,5 +198,127 @@ class AuthLoginTest extends TestCase
         $response->assertOk();
         $response->assertSee('Profil Siswa');
         $response->assertSee('Perbarui Profil');
+    }
+
+    public function test_guru_can_open_dedicated_subject_create_page(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $response = $this->actingAs($guru)->get(route('guru.subjects.create'));
+
+        $response->assertOk();
+        $response->assertSee('Tambah Mata Pelajaran');
+    }
+
+    public function test_guru_can_open_dedicated_material_create_page(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Biologi',
+            'kelas' => '10',
+            'created_by' => $guru->id,
+        ]);
+
+        $response = $this->actingAs($guru)->get(route('guru.subjects.materials.create', $subject));
+
+        $response->assertOk();
+        $response->assertSee('Tambah Materi Baru');
+        $response->assertSee('Biologi');
+    }
+
+    public function test_material_has_dedicated_detail_page(): void
+    {
+        $siswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => '11',
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Sejarah',
+            'kelas' => '11',
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab 2',
+            'description' => '<h2>Bab 2</h2><p><strong>Isi materi</strong></p>',
+        ]);
+
+        $response = $this->actingAs($siswa)->get(route('materials.show', [$subject, $material]));
+
+        $response->assertOk();
+        $response->assertSee('Bab 2');
+        $response->assertSee('Isi materi', false);
+    }
+
+    public function test_guru_can_update_material(): void
+    {
+        Storage::fake('public');
+
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Bahasa Indonesia',
+            'kelas' => '12',
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Awal',
+            'description' => '<p>Deskripsi lama</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $response = $this->actingAs($guru)->put(route('guru.materials.update', [$subject, $material]), [
+            'title' => 'Bab Revisi',
+            'description' => '<h2>Judul Baru</h2><p><em>Konten baru</em></p>',
+            'file' => UploadedFile::fake()->create('revisi.pdf', 120, 'application/pdf'),
+        ]);
+
+        $response->assertRedirect(route('materials.show', [$subject, $material]));
+        $this->assertDatabaseHas('materials', [
+            'id' => $material->id,
+            'title' => 'Bab Revisi',
+        ]);
+    }
+
+    public function test_guru_can_delete_material(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Geografi',
+            'kelas' => '10',
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Hapus',
+            'description' => '<p>akan dihapus</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $response = $this->actingAs($guru)->delete(route('guru.materials.destroy', [$subject, $material]));
+
+        $response->assertRedirect(route('subjects.show', $subject));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseMissing('materials', [
+            'id' => $material->id,
+        ]);
     }
 }

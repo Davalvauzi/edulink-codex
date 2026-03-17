@@ -22,7 +22,7 @@
     @if ($role === 'guru')
         <div class="static-item">
             Kelola Materi
-            <span>Klik mata pelajaran untuk membuka daftar materi</span>
+            <span>Tambah mapel dan materi lewat halaman khusus</span>
         </div>
     @endif
 @endsection
@@ -38,6 +38,9 @@
 @section('subtitle', $message)
 
 @section('actions')
+    @if ($role === 'guru')
+        <a class="btn btn-primary" href="{{ route('guru.subjects.create') }}">Tambah Mata Pelajaran</a>
+    @endif
     @if ($role === 'siswa' && isset($user))
         <a class="btn btn-soft" href="{{ route('siswa.profile') }}">Profile</a>
     @endif
@@ -48,15 +51,15 @@
         <section class="cards">
             <article class="card">
                 <strong>Ringkasan Akademik</strong>
-                <p>Pantau perkembangan belajar Anda dan buka materi per mata pelajaran dari dashboard ini.</p>
+                <p>Buka mata pelajaran lalu lanjut ke halaman detail tiap materi untuk membaca isi lengkapnya.</p>
             </article>
             <article class="card">
                 <strong>Informasi Kelas</strong>
                 <p>Anda terdaftar sebagai siswa kelas {{ $user->kelas }} dan dashboard otomatis menampilkan daftar mapel terkait.</p>
             </article>
             <article class="card">
-                <strong>Halaman Profil Baru</strong>
-                <p>Tombol profile di kanan atas sekarang membuka halaman khusus untuk mengubah data siswa.</p>
+                <strong>Halaman Profil</strong>
+                <p>Tombol profile di kanan atas membuka halaman khusus untuk mengubah data siswa.</p>
             </article>
         </section>
 
@@ -64,7 +67,7 @@
             <div class="section-title">
                 <div>
                     <strong>Mata Pelajaran Berdasarkan Kelas</strong>
-                    <p>Gunakan filter kelas lalu klik mata pelajaran untuk melihat materi yang tersedia.</p>
+                    <p>Gunakan filter kelas lalu klik mata pelajaran untuk melihat daftar materi.</p>
                 </div>
             </div>
 
@@ -98,28 +101,10 @@
         <section class="meta">
             <div class="section-title">
                 <div>
-                    <strong>Tambah Mata Pelajaran</strong>
-                    <p>Setelah dibuat, klik salah satu mata pelajaran untuk menambahkan materi seperti Bab 1, Bab 2, dan file PDF.</p>
+                    <strong>Daftar Mata Pelajaran</strong>
+                    <p>Klik mata pelajaran untuk melihat daftar materi, membuka detail materi, atau menambah materi baru.</p>
                 </div>
             </div>
-
-            <form class="subject-form" method="POST" action="{{ route('guru.subjects.store') }}">
-                @csrf
-                <div class="field">
-                    <label for="subject-name">Nama Mata Pelajaran</label>
-                    <input id="subject-name" type="text" name="name" value="{{ old('name') }}" placeholder="Contoh: Fisika" required>
-                </div>
-                <div class="field">
-                    <label for="subject-kelas">Kelas</label>
-                    <select id="subject-kelas" name="kelas" required>
-                        <option value="">Pilih kelas</option>
-                        <option value="10" @selected(old('kelas') === '10')>10</option>
-                        <option value="11" @selected(old('kelas') === '11')>11</option>
-                        <option value="12" @selected(old('kelas') === '12')>12</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" type="submit">Tambah Mata Pelajaran</button>
-            </form>
 
             @if ($subjects->isEmpty())
                 <div class="empty-state">Belum ada mata pelajaran yang tersimpan.</div>
@@ -129,7 +114,7 @@
                         <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
                             <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
                             <h3>{{ $subject->name }}</h3>
-                            <p>{{ $subject->materials_count }} materi tersimpan. Klik untuk membuka dan menambah materi baru.</p>
+                            <p>{{ $subject->materials_count }} materi tersimpan. Klik untuk membuka halaman mapel.</p>
                         </a>
                     @endforeach
                 </div>

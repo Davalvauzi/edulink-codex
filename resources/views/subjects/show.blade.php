@@ -16,9 +16,12 @@
 @endsection
 
 @section('heading', $subject->name)
-@section('subtitle', 'Kelola dan lihat daftar materi untuk mata pelajaran ini. Setiap materi dapat berisi judul bab, deskripsi, dan file PDF pendukung.')
+@section('subtitle', 'Halaman mata pelajaran ini menampilkan daftar materi. Setiap materi memiliki halaman detail sendiri, dan guru dapat menambah materi dari halaman terpisah.')
 
 @section('actions')
+    @if ($role === 'guru')
+        <a class="btn btn-primary" href="{{ route('guru.subjects.materials.create', $subject) }}">Tambah Materi</a>
+    @endif
     <a class="btn btn-soft" href="{{ route($role.'.dashboard') }}">Kembali</a>
 @endsection
 
@@ -38,39 +41,11 @@
         </article>
     </section>
 
-    @if ($role === 'guru')
-        <section class="meta">
-            <div class="section-title">
-                <div>
-                    <strong>Tambah Materi Baru</strong>
-                    <p>Isi nama materi seperti Bab 1, Bab 2, dan tambahkan file PDF jika tersedia.</p>
-                </div>
-            </div>
-
-            <form class="material-form" method="POST" action="{{ route('guru.subjects.materials.store', $subject) }}" enctype="multipart/form-data">
-                @csrf
-                <div class="field">
-                    <label for="title">Nama Materi</label>
-                    <input id="title" type="text" name="title" value="{{ old('title') }}" placeholder="Contoh: Bab 1" required>
-                </div>
-                <div class="field field-full">
-                    <label for="description">Deskripsi</label>
-                    <textarea id="description" name="description" placeholder="Jelaskan isi materi ini" required>{{ old('description') }}</textarea>
-                </div>
-                <div class="field">
-                    <label for="file">File PDF</label>
-                    <input id="file" type="file" name="file" accept="application/pdf">
-                </div>
-                <button class="btn btn-primary" type="submit">Simpan Materi</button>
-            </form>
-        </section>
-    @endif
-
     <section class="meta">
         <div class="section-title">
             <div>
                 <strong>Daftar Materi</strong>
-                <p>Materi terbaru ditampilkan di bagian paling atas.</p>
+                <p>Klik salah satu materi untuk membuka halaman detail materi.</p>
             </div>
         </div>
 
@@ -79,10 +54,10 @@
         @else
             <div class="materials-grid">
                 @foreach ($subject->materials as $material)
-                    <article class="material-item">
+                    <a class="material-item" href="{{ route('materials.show', [$subject, $material]) }}">
                         <span class="subject-badge">{{ $material->title }}</span>
                         <h3>{{ $material->title }}</h3>
-                        <p>{{ $material->description }}</p>
+                        <p>{{ \Illuminate\Support\Str::limit(strip_tags($material->description), 140) }}</p>
 
                         <div class="material-meta">
                             <div>
@@ -95,16 +70,10 @@
                             </div>
                             <div>
                                 <span>File</span>
-                                @if ($material->file_path)
-                                    <a class="link-inline" href="{{ asset('storage/'.$material->file_path) }}" target="_blank" rel="noopener">
-                                        {{ $material->file_name ?? 'Lihat PDF' }}
-                                    </a>
-                                @else
-                                    <strong>Tidak ada file</strong>
-                                @endif
+                                <strong>{{ $material->file_name ?? 'Tidak ada file' }}</strong>
                             </div>
                         </div>
-                    </article>
+                    </a>
                 @endforeach
             </div>
         @endif

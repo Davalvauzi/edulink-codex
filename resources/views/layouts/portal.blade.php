@@ -179,6 +179,11 @@
             background: #10231f;
         }
 
+        .btn-danger {
+            color: #fff;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+        }
+
         .btn-soft {
             color: var(--text);
             background: var(--surface);
@@ -352,6 +357,73 @@
             text-decoration: none;
         }
 
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .toolbar button,
+        .toolbar select {
+            width: auto;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--text);
+        }
+
+        .rich-editor {
+            min-height: 220px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #fff;
+            line-height: 1.7;
+            outline: none;
+        }
+
+        .rich-editor:empty::before {
+            content: attr(data-placeholder);
+            color: #90a4ae;
+        }
+
+        .prose {
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .prose h1,
+        .prose h2,
+        .prose h3 {
+            margin: 0 0 14px;
+            line-height: 1.25;
+        }
+
+        .prose p,
+        .prose ul,
+        .prose ol,
+        .prose blockquote {
+            margin: 0 0 16px;
+        }
+
+        .prose blockquote {
+            padding-left: 16px;
+            border-left: 4px solid #f59e0b;
+            color: var(--muted);
+        }
+
+        .prose ul,
+        .prose ol {
+            padding-left: 24px;
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px;
+        }
+
         .error-list {
             margin: 0 0 18px;
             padding: 14px 16px 14px 32px;
@@ -452,5 +524,7 @@
             @yield('content')
         </main>
     </div>
+
+    @stack('scripts')
 </body>
 </html>
