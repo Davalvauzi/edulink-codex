@@ -31,6 +31,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:guru')
         ->name('guru.dashboard');
 
+    Route::post('/guru/subjects', [DashboardController::class, 'storeSubject'])
+        ->middleware('role:guru')
+        ->name('guru.subjects.store');
+
     Route::get('/siswa/dashboard', [DashboardController::class, 'siswa'])
         ->middleware('role:siswa')
         ->name('siswa.dashboard');

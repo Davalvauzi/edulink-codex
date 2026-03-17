@@ -260,6 +260,86 @@
             padding: 24px;
         }
 
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .section-title p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .filter-form,
+        .subject-form {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .filter-form .field,
+        .subject-form .field {
+            min-width: 160px;
+            flex: 1;
+        }
+
+        .filter-form input,
+        .filter-form select,
+        .subject-form input,
+        .subject-form select {
+            margin-bottom: 0;
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .subject-item {
+            padding: 20px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 247, 246, 0.98));
+            border: 1px solid var(--line);
+        }
+
+        .subject-badge {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: #9a3412;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+        }
+
+        .subject-item h3 {
+            margin: 0 0 8px;
+            font-size: 20px;
+        }
+
+        .subject-item p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .empty-state {
+            margin-top: 18px;
+            padding: 22px;
+            border-radius: 20px;
+            background: #f8fbfa;
+            border: 1px dashed var(--line);
+            color: var(--muted);
+        }
+
         .meta-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -293,6 +373,7 @@
             }
 
             .cards,
+            .subjects-grid,
             .meta-grid {
                 grid-template-columns: 1fr;
             }
@@ -315,6 +396,13 @@
 
             h1 {
                 font-size: 32px;
+            }
+
+            .section-title,
+            .filter-form,
+            .subject-form {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
@@ -340,6 +428,16 @@
                     <div class="static-item">
                         Kelas Aktif
                         <span>Kelas {{ $user->kelas }}</span>
+                    </div>
+                    <div class="static-item">
+                        Filter Materi
+                        <span>Menampilkan kelas {{ $selectedKelas }}</span>
+                    </div>
+                @endif
+                @if ($role === 'guru')
+                    <div class="static-item">
+                        Kelola Materi
+                        <span>Tambah mapel untuk kelas 10, 11, dan 12</span>
                     </div>
                 @endif
             </div>
@@ -415,12 +513,47 @@
                     </article>
                     <article class="card">
                         <strong>Informasi Kelas</strong>
-                        <p>Anda terdaftar sebagai siswa kelas {{ $user->kelas }} dan bisa memperbarui kelas dari menu edit profile di kanan atas.</p>
+                        <p>Anda terdaftar sebagai siswa kelas {{ $user->kelas }} dan dashboard otomatis menampilkan materi untuk kelas tersebut.</p>
                     </article>
                     <article class="card">
-                        <strong>Akses Cepat</strong>
-                        <p>Gunakan panel samping untuk melihat ringkasan akun, kemudian logout dengan aman setelah selesai menggunakan sistem.</p>
+                        <strong>Filter Manual</strong>
+                        <p>Anda tetap bisa memeriksa materi kelas 10, 11, atau 12 secara manual menggunakan filter di bawah.</p>
                     </article>
+                </section>
+
+                <section class="meta">
+                    <div class="section-title">
+                        <div>
+                            <strong>Materi Berdasarkan Kelas</strong>
+                            <p>Default filter mengikuti kelas siswa. Ganti filter untuk melihat materi dari kelas lain.</p>
+                        </div>
+                    </div>
+
+                    <form class="filter-form" method="GET" action="{{ route('siswa.dashboard') }}">
+                        <div class="field">
+                            <label for="kelas-filter">Filter Kelas</label>
+                            <select id="kelas-filter" name="kelas">
+                                <option value="10" @selected($selectedKelas === '10')>Kelas 10</option>
+                                <option value="11" @selected($selectedKelas === '11')>Kelas 11</option>
+                                <option value="12" @selected($selectedKelas === '12')>Kelas 12</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Terapkan Filter</button>
+                    </form>
+
+                    @if ($subjects->isEmpty())
+                        <div class="empty-state">Belum ada mata pelajaran untuk kelas {{ $selectedKelas }}.</div>
+                    @else
+                        <div class="subjects-grid">
+                            @foreach ($subjects as $subject)
+                                <article class="subject-item">
+                                    <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
+                                    <h3>{{ $subject->name }}</h3>
+                                    <p>Materi ini tersedia untuk siswa kelas {{ $subject->kelas }} di portal EduLink.</p>
+                                </article>
+                            @endforeach
+                        </div>
+                    @endif
                 </section>
 
                 <section class="meta">
@@ -439,6 +572,47 @@
                             <strong>{{ $user->kelas }}</strong>
                         </div>
                     </div>
+                </section>
+            @elseif ($role === 'guru')
+                <section class="meta">
+                    <div class="section-title">
+                        <div>
+                            <strong>Tambah Mata Pelajaran</strong>
+                            <p>Guru dapat menambahkan mata pelajaran baru lalu menentukan mapel tersebut untuk kelas 10, 11, atau 12.</p>
+                        </div>
+                    </div>
+
+                    <form class="subject-form" method="POST" action="{{ route('guru.subjects.store') }}">
+                        @csrf
+                        <div class="field">
+                            <label for="subject-name">Nama Mata Pelajaran</label>
+                            <input id="subject-name" type="text" name="name" value="{{ old('name') }}" placeholder="Contoh: Fisika" required>
+                        </div>
+                        <div class="field">
+                            <label for="subject-kelas">Kelas</label>
+                            <select id="subject-kelas" name="kelas" required>
+                                <option value="">Pilih kelas</option>
+                                <option value="10" @selected(old('kelas') === '10')>10</option>
+                                <option value="11" @selected(old('kelas') === '11')>11</option>
+                                <option value="12" @selected(old('kelas') === '12')>12</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Tambah Mata Pelajaran</button>
+                    </form>
+
+                    @if ($subjects->isEmpty())
+                        <div class="empty-state">Belum ada mata pelajaran yang tersimpan.</div>
+                    @else
+                        <div class="subjects-grid">
+                            @foreach ($subjects as $subject)
+                                <article class="subject-item">
+                                    <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
+                                    <h3>{{ $subject->name }}</h3>
+                                    <p>Ditambahkan ke daftar materi kelas {{ $subject->kelas }}.</p>
+                                </article>
+                            @endforeach
+                        </div>
+                    @endif
                 </section>
             @else
                 <section class="meta">

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -87,6 +88,63 @@ class AuthLoginTest extends TestCase
             'name' => 'Siswa Update',
             'email' => 'siswa-update@example.com',
             'kelas' => '12',
+        ]);
+    }
+
+    public function test_siswa_dashboard_defaults_to_user_kelas_subjects(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => '11',
+        ]);
+
+        Subject::query()->create(['name' => 'Fisika Lanjut', 'kelas' => '11']);
+        Subject::query()->create(['name' => 'Ekonomi Dasar', 'kelas' => '10']);
+
+        $response = $this->actingAs($user)->get('/siswa/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Fisika Lanjut');
+        $response->assertDontSee('Ekonomi Dasar');
+        $response->assertSee('Menampilkan kelas 11');
+    }
+
+    public function test_siswa_can_filter_subjects_to_other_kelas(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => '11',
+        ]);
+
+        Subject::query()->create(['name' => 'Sosiologi Global', 'kelas' => '12']);
+        Subject::query()->create(['name' => 'Sejarah Nusantara', 'kelas' => '11']);
+
+        $response = $this->actingAs($user)->get('/siswa/dashboard?kelas=12');
+
+        $response->assertOk();
+        $response->assertSee('Sosiologi Global');
+        $response->assertDontSee('Sejarah Nusantara');
+        $response->assertSee('Menampilkan kelas 12');
+    }
+
+    public function test_guru_can_add_subject_for_specific_kelas(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $response = $this->actingAs($guru)->post('/guru/subjects', [
+            'name' => 'Kimia',
+            'kelas' => '10',
+        ]);
+
+        $response->assertRedirect(route('guru.dashboard'));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('subjects', [
+            'name' => 'Kimia',
+            'kelas' => '10',
+            'created_by' => $guru->id,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -15,7 +16,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::query()->updateOrCreate(
+        $admin = User::query()->updateOrCreate(
             ['email' => 'admin@edulink.test'],
             [
                 'name' => 'Admin EduLink',
@@ -25,7 +26,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        User::query()->updateOrCreate(
+        $guru = User::query()->updateOrCreate(
             ['email' => 'guru@edulink.test'],
             [
                 'name' => 'Guru EduLink',
@@ -44,5 +45,19 @@ class DatabaseSeeder extends Seeder
                 'password' => 'password',
             ]
         );
+
+        foreach (['10', '11', '12'] as $kelas) {
+            foreach (['Matematika', 'Bahasa Indonesia', 'Bahasa Inggris'] as $subjectName) {
+                Subject::query()->updateOrCreate(
+                    [
+                        'name' => $subjectName,
+                        'kelas' => $kelas,
+                    ],
+                    [
+                        'created_by' => $guru->id ?? $admin->id ?? null,
+                    ]
+                );
+            }
+        }
     }
 }
