@@ -35,9 +35,22 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:guru')
         ->name('guru.subjects.store');
 
+    Route::get('/subjects/{subject}', [DashboardController::class, 'showSubject'])
+        ->whereNumber('subject')
+        ->name('subjects.show');
+
+    Route::post('/guru/subjects/{subject}/materials', [DashboardController::class, 'storeMaterial'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->name('guru.subjects.materials.store');
+
     Route::get('/siswa/dashboard', [DashboardController::class, 'siswa'])
         ->middleware('role:siswa')
         ->name('siswa.dashboard');
+
+    Route::get('/siswa/profile', [DashboardController::class, 'showSiswaProfile'])
+        ->middleware('role:siswa')
+        ->name('siswa.profile');
 
     Route::put('/siswa/profile', [DashboardController::class, 'updateSiswaProfile'])
         ->middleware('role:siswa')

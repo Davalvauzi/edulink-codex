@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AuthLoginTest extends TestCase
@@ -65,7 +67,7 @@ class AuthLoginTest extends TestCase
         ]);
     }
 
-    public function test_siswa_can_update_profile_from_dashboard(): void
+    public function test_siswa_can_update_profile_from_profile_page(): void
     {
         $user = User::factory()->create([
             'role' => 'siswa',
@@ -81,7 +83,7 @@ class AuthLoginTest extends TestCase
             'password_confirmation' => 'password999',
         ]);
 
-        $response->assertRedirect(route('siswa.dashboard'));
+        $response->assertRedirect(route('siswa.profile'));
         $response->assertSessionHas('success');
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
@@ -146,5 +148,50 @@ class AuthLoginTest extends TestCase
             'kelas' => '10',
             'created_by' => $guru->id,
         ]);
+    }
+
+    public function test_guru_can_add_material_to_subject(): void
+    {
+        Storage::fake('public');
+
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Matematika',
+            'kelas' => '11',
+            'created_by' => $guru->id,
+        ]);
+
+        $response = $this->actingAs($guru)->post(route('guru.subjects.materials.store', $subject), [
+            'title' => 'Bab 1',
+            'description' => 'Pengenalan aljabar',
+            'file' => UploadedFile::fake()->create('bab-1.pdf', 100, 'application/pdf'),
+        ]);
+
+        $response->assertRedirect(route('subjects.show', $subject));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('materials', [
+            'subject_id' => $subject->id,
+            'title' => 'Bab 1',
+            'description' => 'Pengenalan aljabar',
+            'created_by' => $guru->id,
+        ]);
+    }
+
+    public function test_siswa_can_open_profile_page_from_dedicated_route(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => '10',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('siswa.profile'));
+
+        $response->assertOk();
+        $response->assertSee('Profil Siswa');
+        $response->assertSee('Perbarui Profil');
     }
 }

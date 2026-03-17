@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Material;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,12 +23,13 @@ class DashboardController extends Controller
     public function guru(): View
     {
         $subjects = Subject::query()
+            ->withCount('materials')
             ->latest()
             ->get();
 
         return view('dashboard', [
             'title' => 'Dashboard Guru',
-            'message' => 'Tambahkan mata pelajaran baru untuk tiap kelas dan pantau daftar materi yang tersedia.',
+            'message' => 'Tambahkan mata pelajaran baru untuk tiap kelas dan kelola materi di dalam setiap mata pelajaran.',
             'role' => Auth::user()->role,
             'subjects' => $subjects,
         ]);
@@ -40,17 +42,47 @@ class DashboardController extends Controller
         $selectedKelas = in_array($selectedKelas, ['10', '11', '12'], true) ? $selectedKelas : $user->kelas;
 
         $subjects = Subject::query()
+            ->withCount('materials')
             ->where('kelas', $selectedKelas)
             ->orderBy('name')
             ->get();
 
         return view('dashboard', [
             'title' => 'Dashboard Siswa',
-            'message' => 'Lihat ringkasan kegiatan belajar, jadwal penting, dan lengkapi profil Anda dari panel ini.',
+            'message' => 'Lihat ringkasan kegiatan belajar, buka materi tiap mata pelajaran, dan kelola profil dari halaman khusus.',
             'role' => $user->role,
             'user' => $user,
             'subjects' => $subjects,
             'selectedKelas' => $selectedKelas,
+        ]);
+    }
+
+    public function showSubject(Request $request, Subject $subject): View
+    {
+        $user = $request->user();
+
+        abort_if(! in_array($user->role, ['guru', 'siswa'], true), 403);
+
+        $subject->load(['creator', 'materials.creator']);
+
+        return view('subjects.show', [
+            'title' => 'Materi '.$subject->name,
+            'role' => $user->role,
+            'user' => $user,
+            'subject' => $subject,
+        ]);
+    }
+
+    public function showSiswaProfile(Request $request): View
+    {
+        $user = $request->user();
+
+        abort_if($user->role !== 'siswa', 403);
+
+        return view('siswa.profile', [
+            'title' => 'Profil Siswa',
+            'role' => $user->role,
+            'user' => $user,
         ]);
     }
 
@@ -72,6 +104,39 @@ class DashboardController extends Controller
         return redirect()
             ->route('guru.dashboard')
             ->with('success', 'Mata pelajaran berhasil ditambahkan.');
+    }
+
+    public function storeMaterial(Request $request, Subject $subject): RedirectResponse
+    {
+        abort_if($request->user()->role !== 'guru', 403);
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+        ]);
+
+        $filePath = null;
+        $fileName = null;
+
+        if ($request->hasFile('file')) {
+            $storedFile = $request->file('file');
+            $filePath = $storedFile->store('materials', 'public');
+            $fileName = $storedFile->getClientOriginalName();
+        }
+
+        Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'file_path' => $filePath,
+            'file_name' => $fileName,
+            'created_by' => $request->user()->id,
+        ]);
+
+        return redirect()
+            ->route('subjects.show', $subject)
+            ->with('success', 'Materi berhasil ditambahkan ke mata pelajaran.');
     }
 
     public function updateSiswaProfile(Request $request): RedirectResponse
@@ -98,7 +163,7 @@ class DashboardController extends Controller
         $user->save();
 
         return redirect()
-            ->route('siswa.dashboard')
+            ->route('siswa.profile')
             ->with('success', 'Profil siswa berhasil diperbarui.');
     }
 }
