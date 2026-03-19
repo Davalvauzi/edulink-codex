@@ -56,7 +56,7 @@
 
         .brand h2 {
             margin: 0 0 8px;
-            font-size: 26px;
+            font-size: 22px;
             letter-spacing: 0.04em;
         }
 
@@ -64,7 +64,8 @@
         .nav p {
             margin: 0;
             color: rgba(238, 251, 246, 0.72);
-            line-height: 1.6;
+            line-height: 1.5;
+            font-size: 13px;
         }
 
         .nav {
@@ -76,12 +77,13 @@
         .nav a,
         .nav .static-item {
             display: block;
-            padding: 14px 16px;
-            border-radius: 16px;
+            padding: 11px 13px;
+            border-radius: 14px;
             background: rgba(255, 255, 255, 0.06);
             color: #fff;
             text-decoration: none;
             font-weight: 700;
+            font-size: 14px;
         }
 
         .nav .static-item span,
@@ -89,7 +91,7 @@
             display: block;
             margin-top: 4px;
             color: rgba(238, 251, 246, 0.7);
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 400;
         }
 
@@ -125,11 +127,11 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 999px;
             background: var(--accent-soft);
             color: #9a3412;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -137,7 +139,7 @@
 
         h1 {
             margin: 14px 0 10px;
-            font-size: 40px;
+            font-size: 32px;
             line-height: 1.1;
         }
 
@@ -145,7 +147,8 @@
             margin: 0;
             color: var(--muted);
             max-width: 760px;
-            line-height: 1.7;
+            line-height: 1.6;
+            font-size: 14px;
         }
 
         .actions {
@@ -167,6 +170,13 @@
             font-weight: 700;
             cursor: pointer;
             text-decoration: none;
+        }
+
+        .btn-section {
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            white-space: nowrap;
         }
 
         .btn-primary {
@@ -215,7 +225,7 @@
         .meta-item strong {
             display: block;
             margin-bottom: 8px;
-            font-size: 16px;
+            font-size: 15px;
         }
 
         .card p,
@@ -224,7 +234,8 @@
         .material-item p {
             margin: 0;
             color: var(--muted);
-            line-height: 1.7;
+            line-height: 1.6;
+            font-size: 14px;
         }
 
         .meta {
@@ -246,6 +257,7 @@
         .section-title p {
             margin: 6px 0 0;
             color: var(--muted);
+            font-size: 14px;
         }
 
         .filter-form,
@@ -323,7 +335,7 @@
         .subject-item h3,
         .material-item h3 {
             margin: 0 0 10px;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .empty-state {
@@ -340,7 +352,7 @@
             display: block;
             color: var(--muted);
             margin-bottom: 8px;
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.06em;
         }
@@ -475,7 +487,7 @@
 
         .subsection-item h3 {
             margin: 0 0 10px;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .subsection-content {
@@ -560,8 +572,12 @@
                 justify-content: flex-start;
             }
 
+            .btn-section {
+                width: 100%;
+            }
+
             h1 {
-                font-size: 32px;
+                font-size: 28px;
             }
         }
     </style>

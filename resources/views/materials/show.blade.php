@@ -20,7 +20,6 @@
 
 @section('actions')
     @if ($role === 'guru')
-        <a class="btn btn-primary" href="{{ route('guru.materials.subsections.create', [$subject, $material]) }}">Tambah Sub Bab</a>
         <a class="btn btn-soft" href="{{ route('guru.materials.edit', [$subject, $material]) }}">Edit</a>
         <form method="POST" action="{{ route('guru.materials.destroy', [$subject, $material]) }}" onsubmit="return confirm('Hapus materi ini?');">
             @csrf
@@ -92,6 +91,9 @@
                 <strong>Daftar Sub Bab</strong>
                 <p>{{ $role === 'guru' ? 'Kelola pembahasan bertahap di bawah bab utama ini.' : 'Buka sub bab untuk membaca isi materi sekaligus menambah progress belajar.' }}</p>
             </div>
+            @if ($role === 'guru')
+                <a class="btn btn-primary btn-section" href="{{ route('guru.materials.subsections.create', [$subject, $material]) }}">Tambah Sub Bab</a>
+            @endif
         </div>
 
         @if ($subsections->isEmpty())

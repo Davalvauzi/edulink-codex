@@ -46,37 +46,13 @@ class SubjectController extends Controller
 
         abort_if(! in_array($user->role, ['guru', 'siswa'], true), 403);
 
-        $subject->load([
-            'creator',
-            'materials' => fn ($query) => $query
-                ->with('creator')
-                ->with('subsections', function ($subsectionQuery) use ($user) {
-                    $subsectionQuery->with(
-                        $user->role === 'siswa'
-                            ? ['progressRecords' => fn ($progressQuery) => $progressQuery->where('user_id', $user->id)]
-                            : ['progressRecords']
-                    );
-                }),
-        ]);
-
-        $materials = $subject->materials->map(function ($material) use ($user) {
-            $material->subsections_count = $material->subsections->count();
-            $material->completed_subsections_count = $user->role === 'siswa'
-                ? $material->subsections->filter(fn ($subsection) => $subsection->progressRecords->isNotEmpty())->count()
-                : 0;
-            $material->progress_percentage = $material->subsections_count > 0
-                ? (int) round(($material->completed_subsections_count / $material->subsections_count) * 100)
-                : 0;
-
-            return $material;
-        });
+        $subject->load(['creator', 'materials.creator']);
 
         return view('subjects.show', [
             'title' => 'Materi '.$subject->name,
             'role' => $user->role,
             'user' => $user,
             'subject' => $subject,
-            'materials' => $materials,
         ]);
     }
 }

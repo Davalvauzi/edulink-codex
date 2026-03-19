@@ -16,12 +16,9 @@
 @endsection
 
 @section('heading', $subject->name)
-@section('subtitle', 'Halaman mata pelajaran ini menampilkan daftar materi. Setiap materi memiliki halaman detail sendiri, dan guru dapat menambah materi dari halaman terpisah.')
+@section('subtitle', 'Halaman mata pelajaran ini menampilkan daftar bab atau materi utama. Sub bab hanya bisa diakses setelah Anda membuka halaman materi tertentu.')
 
 @section('actions')
-    @if ($role === 'guru')
-        <a class="btn btn-primary" href="{{ route('guru.subjects.materials.create', $subject) }}">Tambah Materi</a>
-    @endif
     <a class="btn btn-soft" href="{{ route($role.'.dashboard') }}">Kembali</a>
 @endsection
 
@@ -45,31 +42,23 @@
         <div class="section-title">
             <div>
                 <strong>Daftar Materi</strong>
-                <p>Klik salah satu materi untuk membuka halaman detail materi.</p>
+                <p>Klik salah satu bab untuk masuk ke halaman detail materi dan melihat sub bab di dalamnya.</p>
             </div>
+            @if ($role === 'guru')
+                <a class="btn btn-primary btn-section" href="{{ route('guru.subjects.materials.create', $subject) }}">Tambah Materi</a>
+            @endif
         </div>
 
         @if ($subject->materials->isEmpty())
             <div class="empty-state">Belum ada materi pada mata pelajaran ini.</div>
         @else
             <div class="materials-grid">
-                @foreach ($materials as $material)
+                @foreach ($subject->materials as $material)
                     <a class="material-item" href="{{ route('materials.show', [$subject, $material]) }}">
                         <span class="subject-badge">{{ $material->title }}</span>
                         <h3>{{ $material->title }}</h3>
                         <p>{{ \Illuminate\Support\Str::limit(strip_tags($material->description), 140) }}</p>
-                        @if ($role === 'siswa' && $material->subsections_count > 0)
-                            <div class="inline-progress">
-                                <div class="progress-track compact">
-                                    <div class="progress-fill" style="width: {{ $material->progress_percentage }}%;"></div>
-                                </div>
-                                <strong>{{ $material->completed_subsections_count }}/{{ $material->subsections_count }} sub bab selesai</strong>
-                            </div>
-                        @elseif ($material->subsections_count > 0)
-                            <p class="material-summary">{{ $material->subsections_count }} sub bab tersedia di dalam bab ini.</p>
-                        @else
-                            <p class="material-summary">Belum ada sub bab di dalam bab ini.</p>
-                        @endif
+                        <p class="material-summary">Sub bab tersedia di dalam halaman detail materi ini.</p>
 
                         <div class="material-meta">
                             <div>
@@ -83,10 +72,6 @@
                             <div>
                                 <span>File</span>
                                 <strong>{{ $material->file_name ?? 'Tidak ada file' }}</strong>
-                            </div>
-                            <div>
-                                <span>Sub Bab</span>
-                                <strong>{{ $material->subsections_count }}</strong>
                             </div>
                         </div>
                     </a>
