@@ -53,11 +53,23 @@
             <div class="empty-state">Belum ada materi pada mata pelajaran ini.</div>
         @else
             <div class="materials-grid">
-                @foreach ($subject->materials as $material)
+                @foreach ($materials as $material)
                     <a class="material-item" href="{{ route('materials.show', [$subject, $material]) }}">
                         <span class="subject-badge">{{ $material->title }}</span>
                         <h3>{{ $material->title }}</h3>
                         <p>{{ \Illuminate\Support\Str::limit(strip_tags($material->description), 140) }}</p>
+                        @if ($role === 'siswa' && $material->subsections_count > 0)
+                            <div class="inline-progress">
+                                <div class="progress-track compact">
+                                    <div class="progress-fill" style="width: {{ $material->progress_percentage }}%;"></div>
+                                </div>
+                                <strong>{{ $material->completed_subsections_count }}/{{ $material->subsections_count }} sub bab selesai</strong>
+                            </div>
+                        @elseif ($material->subsections_count > 0)
+                            <p class="material-summary">{{ $material->subsections_count }} sub bab tersedia di dalam bab ini.</p>
+                        @else
+                            <p class="material-summary">Belum ada sub bab di dalam bab ini.</p>
+                        @endif
 
                         <div class="material-meta">
                             <div>
@@ -71,6 +83,10 @@
                             <div>
                                 <span>File</span>
                                 <strong>{{ $material->file_name ?? 'Tidak ada file' }}</strong>
+                            </div>
+                            <div>
+                                <span>Sub Bab</span>
+                                <strong>{{ $material->subsections_count }}</strong>
                             </div>
                         </div>
                     </a>

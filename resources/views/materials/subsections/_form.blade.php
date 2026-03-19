@@ -1,16 +1,21 @@
 @php
-    $editorId = $editorId ?? 'description-editor';
-    $inputId = $inputId ?? 'description';
-    $descriptionValue = old('description', $material->description ?? '<p></p>');
+    $editorId = $editorId ?? 'subsection-description-editor';
+    $inputId = $inputId ?? 'subsection-description';
+    $descriptionValue = old('description', $subsection->description ?? '<p></p>');
 @endphp
 
 <div class="field">
-    <label for="title">Nama Materi</label>
-    <input id="title" type="text" name="title" value="{{ old('title', $material->title ?? '') }}" placeholder="Contoh: Bab 1 Aljabar" required>
+    <label for="title">Nama Sub Bab</label>
+    <input id="title" type="text" name="title" value="{{ old('title', $subsection->title ?? '') }}" placeholder="Contoh: Bentuk Aljabar" required>
+</div>
+
+<div class="field">
+    <label for="position">Urutan Sub Bab</label>
+    <input id="position" type="number" min="1" name="position" value="{{ old('position', $subsection->position ?? 1) }}" required>
 </div>
 
 <div class="field field-full">
-    <label for="{{ $inputId }}">Deskripsi Bab Utama</label>
+    <label for="{{ $inputId }}">Isi Sub Bab</label>
     <div class="toolbar" data-editor-toolbar>
         <select data-editor-block>
             <option value="P">Paragraf</option>
@@ -31,17 +36,9 @@
         contenteditable="true"
         data-editor
         data-input="{{ $inputId }}"
-        data-placeholder="Tulis ringkasan atau pengantar bab utama di sini"
+        data-placeholder="Tulis isi sub bab di sini"
     >{!! $descriptionValue !!}</div>
     <input id="{{ $inputId }}" type="hidden" name="description" value="{{ e($descriptionValue) }}">
-</div>
-
-<div class="field">
-    <label for="file">File PDF</label>
-    <input id="file" type="file" name="file" accept="application/pdf">
-    @if (! empty($material?->file_name))
-        <p>File saat ini: {{ $material->file_name }}</p>
-    @endif
 </div>
 
 @once

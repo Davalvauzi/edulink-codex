@@ -6,20 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Material extends Model
+class MaterialSubsection extends Model
 {
     protected $fillable = [
-        'subject_id',
+        'material_id',
         'title',
         'description',
-        'file_path',
-        'file_name',
+        'position',
         'created_by',
     ];
 
-    public function subject(): BelongsTo
+    public function material(): BelongsTo
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(Material::class);
     }
 
     public function creator(): BelongsTo
@@ -27,8 +26,8 @@ class Material extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function subsections(): HasMany
+    public function progressRecords(): HasMany
     {
-        return $this->hasMany(MaterialSubsection::class)->orderBy('position')->orderBy('id');
+        return $this->hasMany(MaterialSubsectionProgress::class, 'material_subsection_id');
     }
 }

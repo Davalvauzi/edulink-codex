@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Material;
+use App\Models\MaterialSubsection;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -320,5 +321,100 @@ class AuthLoginTest extends TestCase
         $this->assertDatabaseMissing('materials', [
             'id' => $material->id,
         ]);
+    }
+
+    public function test_guru_can_add_subsection_to_existing_material(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Matematika',
+            'kelas' => '10',
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab 1 Aljabar',
+            'description' => '<p>Pengantar bab utama</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $response = $this->actingAs($guru)->post(route('guru.materials.subsections.store', [$subject, $material]), [
+            'title' => 'Bentuk Aljabar',
+            'position' => 1,
+            'description' => '<p>Isi sub bab bentuk aljabar</p>',
+        ]);
+
+        $response->assertRedirect(route('materials.show', [$subject, $material]));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('material_subsections', [
+            'material_id' => $material->id,
+            'title' => 'Bentuk Aljabar',
+            'position' => 1,
+            'created_by' => $guru->id,
+        ]);
+    }
+
+    public function test_siswa_reading_subsection_updates_material_progress(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $siswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => '11',
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Matematika',
+            'kelas' => '11',
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab 1 Aljabar',
+            'description' => '<p>Bab utama aljabar</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $subsectionOne = MaterialSubsection::query()->create([
+            'material_id' => $material->id,
+            'title' => 'Bentuk Aljabar',
+            'description' => '<p>Sub bab pertama</p>',
+            'position' => 1,
+            'created_by' => $guru->id,
+        ]);
+
+        MaterialSubsection::query()->create([
+            'material_id' => $material->id,
+            'title' => 'Operasi Aljabar',
+            'description' => '<p>Sub bab kedua</p>',
+            'position' => 2,
+            'created_by' => $guru->id,
+        ]);
+
+        $response = $this->actingAs($siswa)->get(route('materials.subsections.show', [$subject, $material, $subsectionOne]));
+
+        $response->assertOk();
+        $response->assertSee('1/2 sub bab selesai');
+        $response->assertSee('50%');
+        $this->assertDatabaseHas('material_subsection_progress', [
+            'material_subsection_id' => $subsectionOne->id,
+            'user_id' => $siswa->id,
+        ]);
+
+        $materialPageResponse = $this->actingAs($siswa)->get(route('materials.show', [$subject, $material]));
+
+        $materialPageResponse->assertOk();
+        $materialPageResponse->assertSee('1 dari 2 sub bab');
+        $materialPageResponse->assertSee('50%');
+        $materialPageResponse->assertSee('Sudah Dibaca');
     }
 }

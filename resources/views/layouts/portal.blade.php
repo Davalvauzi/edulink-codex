@@ -424,6 +424,99 @@
             gap: 16px;
         }
 
+        .progress-panel {
+            display: grid;
+            gap: 12px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 14px;
+            border-radius: 999px;
+            background: #e5ece9;
+            overflow: hidden;
+        }
+
+        .progress-track.compact {
+            height: 10px;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #d97706, #f59e0b);
+        }
+
+        .progress-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #9a3412;
+        }
+
+        .inline-progress {
+            margin-top: 16px;
+        }
+
+        .subsection-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .subsection-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.82);
+        }
+
+        .subsection-item h3 {
+            margin: 0 0 10px;
+            font-size: 20px;
+        }
+
+        .subsection-content {
+            flex: 1;
+        }
+
+        .subsection-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-start;
+            justify-content: flex-end;
+            min-width: 180px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 14px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .status-badge.done {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.pending {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .material-summary {
+            margin-top: 14px !important;
+        }
+
         .error-list {
             margin: 0 0 18px;
             padding: 14px 16px 14px 32px;
@@ -456,7 +549,8 @@
             .filter-form,
             .subject-form,
             .material-form,
-            .profile-form {
+            .profile-form,
+            .subsection-item {
                 flex-direction: column;
                 align-items: stretch;
             }

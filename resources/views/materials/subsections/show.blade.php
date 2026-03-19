@@ -1,0 +1,70 @@
+@extends('layouts.portal')
+
+@section('sidebar')
+    <a href="{{ route('materials.show', [$subject, $material]) }}">
+        Kembali ke Materi
+        <span>{{ $material->title }}</span>
+    </a>
+    <div class="static-item">
+        Sub Bab Aktif
+        <span>{{ $subsection->title }}</span>
+    </div>
+    <div class="static-item">
+        Mata Pelajaran
+        <span>{{ $subject->name }}</span>
+    </div>
+@endsection
+
+@section('heading', $subsection->title)
+@section('subtitle', $role === 'siswa' ? 'Membuka sub bab ini akan dicatat sebagai progres belajar pada bab utama.' : 'Sub bab ini merupakan bagian dari materi utama dan tetap berada di bawah bab induk.')
+
+@section('actions')
+    @if ($role === 'guru')
+        <a class="btn btn-soft" href="{{ route('guru.materials.subsections.edit', [$subject, $material, $subsection]) }}">Edit</a>
+        <form method="POST" action="{{ route('guru.materials.subsections.destroy', [$subject, $material, $subsection]) }}" onsubmit="return confirm('Hapus sub bab ini?');">
+            @csrf
+            @method('DELETE')
+            <button class="btn btn-danger" type="submit">Hapus</button>
+        </form>
+    @endif
+    <a class="btn btn-soft" href="{{ route('materials.show', [$subject, $material]) }}">Kembali</a>
+@endsection
+
+@section('content')
+    <section class="cards">
+        <article class="card">
+            <strong>Bab Utama</strong>
+            <p>{{ $material->title }}</p>
+        </article>
+        <article class="card">
+            <strong>Urutan Sub Bab</strong>
+            <p>Sub bab ke-{{ $subsection->position }}</p>
+        </article>
+        <article class="card">
+            <strong>Progress Bab</strong>
+            <p>{{ $completedSubsections }}/{{ $totalSubsections }} sub bab selesai ({{ $progressPercentage }}%).</p>
+        </article>
+    </section>
+
+    @if ($role === 'siswa')
+        <section class="meta">
+            <div class="progress-panel">
+                <div>
+                    <strong>Progress Belajar Bab {{ $material->title }}</strong>
+                    <p>Progress bertambah saat Anda membuka sub bab. Saat ini Anda sudah menyelesaikan {{ $completedSubsections }} dari {{ $totalSubsections }} sub bab.</p>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: {{ $progressPercentage }}%;"></div>
+                </div>
+                <span class="progress-value">{{ $progressPercentage }}%</span>
+            </div>
+        </section>
+    @endif
+
+    <section class="meta stack">
+        <div>
+            <strong>Isi Sub Bab</strong>
+            <div class="prose">{!! $subsection->description !!}</div>
+        </div>
+    </section>
+@endsection

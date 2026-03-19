@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Models\MaterialSubsection;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class MaterialController extends Controller
@@ -51,7 +53,20 @@ class MaterialController extends Controller
         $user = $request->user();
         abort_if(! in_array($user->role, ['guru', 'siswa'], true), 403);
 
-        $material->load(['creator', 'subject.creator']);
+        $material->load([
+            'creator',
+            'subject.creator',
+            'subsections' => fn ($query) => $query->with(
+                $user->role === 'siswa'
+                    ? ['creator', 'progressRecords' => fn ($progressQuery) => $progressQuery->where('user_id', $user->id)]
+                    : ['creator', 'progressRecords']
+            ),
+        ]);
+
+        [$completedSubsections, $progressPercentage, $subsections] = $this->buildProgressSummary(
+            $material->subsections,
+            $user->role === 'siswa'
+        );
 
         return view('materials.show', [
             'title' => $material->title,
@@ -59,6 +74,10 @@ class MaterialController extends Controller
             'user' => $user,
             'subject' => $subject,
             'material' => $material,
+            'subsections' => $subsections,
+            'completedSubsections' => $completedSubsections,
+            'totalSubsections' => $material->subsections->count(),
+            'progressPercentage' => $progressPercentage,
         ]);
     }
 
@@ -152,6 +171,28 @@ class MaterialController extends Controller
     private function ensureMaterialBelongsToSubject(Subject $subject, Material $material): void
     {
         abort_if($material->subject_id !== $subject->id, 404);
+    }
+
+    private function buildProgressSummary(Collection $subsections, bool $forStudent): array
+    {
+        $mappedSubsections = $subsections->map(function (MaterialSubsection $subsection) use ($forStudent) {
+            $subsection->is_completed = $forStudent
+                ? $subsection->progressRecords->isNotEmpty()
+                : false;
+
+            $subsection->completed_students_count = $forStudent
+                ? 0
+                : $subsection->progressRecords->whereNotNull('completed_at')->count();
+
+            return $subsection;
+        });
+
+        $completedSubsections = $mappedSubsections->where('is_completed', true)->count();
+        $progressPercentage = $mappedSubsections->isNotEmpty()
+            ? (int) round(($completedSubsections / $mappedSubsections->count()) * 100)
+            : 0;
+
+        return [$completedSubsections, $progressPercentage, $mappedSubsections];
     }
 
     private function sanitizeDescription(string $html): string

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\MaterialSubsectionController;
 use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,45 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('subject')
         ->whereNumber('material')
         ->name('materials.show');
+
+    Route::get('/subjects/{subject}/materials/{material}/subsections/create', [MaterialSubsectionController::class, 'create'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('guru.materials.subsections.create');
+
+    Route::post('/subjects/{subject}/materials/{material}/subsections', [MaterialSubsectionController::class, 'store'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('guru.materials.subsections.store');
+
+    Route::get('/subjects/{subject}/materials/{material}/subsections/{subsection}', [MaterialSubsectionController::class, 'show'])
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('subsection')
+        ->name('materials.subsections.show');
+
+    Route::get('/subjects/{subject}/materials/{material}/subsections/{subsection}/edit', [MaterialSubsectionController::class, 'edit'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('subsection')
+        ->name('guru.materials.subsections.edit');
+
+    Route::put('/subjects/{subject}/materials/{material}/subsections/{subsection}', [MaterialSubsectionController::class, 'update'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('subsection')
+        ->name('guru.materials.subsections.update');
+
+    Route::delete('/subjects/{subject}/materials/{material}/subsections/{subsection}', [MaterialSubsectionController::class, 'destroy'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('subsection')
+        ->name('guru.materials.subsections.destroy');
 
     Route::get('/subjects/{subject}/materials/{material}/edit', [MaterialController::class, 'edit'])
         ->middleware('role:guru')

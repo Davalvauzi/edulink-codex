@@ -59,4 +59,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Material::class, 'created_by');
     }
+
+    public function materialSubsections(): HasMany
+    {
+        return $this->hasMany(MaterialSubsection::class, 'created_by');
+    }
+
+    public function subsectionProgress(): HasMany
+    {
+        return $this->hasMany(MaterialSubsectionProgress::class);
+    }
 }
