@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MaterialSubsectionController;
+use App\Http\Controllers\QuizController;
 use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,31 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('subject')
         ->whereNumber('material')
         ->name('materials.show');
+
+    Route::get('/subjects/{subject}/materials/{material}/quizzes/create', [QuizController::class, 'create'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('guru.materials.quizzes.create');
+
+    Route::post('/subjects/{subject}/materials/{material}/quizzes', [QuizController::class, 'store'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('guru.materials.quizzes.store');
+
+    Route::get('/subjects/{subject}/materials/{material}/quizzes/{quiz}', [QuizController::class, 'show'])
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('quiz')
+        ->name('quizzes.show');
+
+    Route::post('/subjects/{subject}/materials/{material}/quizzes/{quiz}/submit', [QuizController::class, 'submit'])
+        ->middleware('role:siswa')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('quiz')
+        ->name('quizzes.submit');
 
     Route::get('/subjects/{subject}/materials/{material}/subsections/create', [MaterialSubsectionController::class, 'create'])
         ->middleware('role:guru')

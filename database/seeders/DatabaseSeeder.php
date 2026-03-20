@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Siswa EduLink',
                 'role' => 'siswa',
-                'kelas' => '12',
+                'kelas' => '10',
                 'password' => 'password',
             ]
         );

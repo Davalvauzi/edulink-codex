@@ -31,23 +31,36 @@
 @endsection
 
 @section('content')
-    <section class="cards">
-        <article class="card">
-            <strong>Mata Pelajaran</strong>
-            <p>{{ $subject->name }}</p>
-        </article>
-        <article class="card">
-            <strong>Dibuat Oleh</strong>
-            <p>{{ $material->creator?->name ?? 'Guru tidak diketahui' }}</p>
-        </article>
-        <article class="card">
-            <strong>Terakhir Diperbarui</strong>
-            <p>{{ $material->updated_at?->format('d M Y H:i') }}</p>
-        </article>
-        <article class="card">
-            <strong>Total Sub Bab</strong>
-            <p>{{ $totalSubsections }} sub bab dalam materi ini.</p>
-        </article>
+    <section class="meta compact">
+        <div class="section-title">
+            <div>
+                <strong>Ringkasan Bab</strong>
+                <p>Informasi utama bab ditampilkan ringkas agar fokus tetap ke isi materi dan latihan.</p>
+            </div>
+        </div>
+
+        <div class="info-strip">
+            <article class="mini-info">
+                <span>Mata Pelajaran</span>
+                <strong>{{ $subject->name }}</strong>
+                <p>Kelas {{ $subject->kelas }}</p>
+            </article>
+            <article class="mini-info">
+                <span>Dibuat Oleh</span>
+                <strong>{{ $material->creator?->name ?? 'Guru tidak diketahui' }}</strong>
+                <p>Materi utama</p>
+            </article>
+            <article class="mini-info">
+                <span>Terakhir Diperbarui</span>
+                <strong>{{ $material->updated_at?->format('d M Y') }}</strong>
+                <p>{{ $material->updated_at?->format('H:i') }}</p>
+            </article>
+            <article class="mini-info">
+                <span>Total Sub Bab</span>
+                <strong>{{ $totalSubsections }}</strong>
+                <p>Sub bab tersedia</p>
+            </article>
+        </div>
     </section>
 
     @if ($role === 'siswa' && $totalSubsections > 0)
@@ -88,6 +101,41 @@
     <section class="meta">
         <div class="section-title">
             <div>
+                <strong>Kuis dan Latihan Soal</strong>
+                <p>{{ $role === 'guru' ? 'Buat kuis pilihan ganda untuk materi ini setelah bab tersedia.' : 'Setelah membaca materi, buka kuis untuk latihan lalu lihat skor dan pembahasan jawaban yang salah.' }}</p>
+            </div>
+            @if ($role === 'guru')
+                <a class="btn btn-primary btn-section" href="{{ route('guru.materials.quizzes.create', [$subject, $material]) }}">Buat Kuis</a>
+            @endif
+        </div>
+
+        @if ($quizzes->isEmpty())
+            <div class="empty-state">Belum ada kuis pada materi ini.</div>
+        @else
+            <div class="quiz-grid">
+                @foreach ($quizzes as $quiz)
+                    <article class="subsection-item card-mode">
+                        <div class="subsection-content">
+                            <span class="subject-badge">Kuis {{ $loop->iteration }}</span>
+                            <h3>{{ $quiz->title }}</h3>
+                            <p>{{ $quiz->description ?: 'Kuis pilihan ganda untuk mengukur pemahaman siswa pada materi ini.' }}</p>
+                            <p class="material-summary">{{ $quiz->questions_count }} soal tersedia. Dibuat oleh {{ $quiz->creator?->name ?? 'guru' }}.</p>
+                        </div>
+
+                        <div class="subsection-actions">
+                            <a class="btn btn-soft" href="{{ route('quizzes.show', [$subject, $material, $quiz]) }}">
+                                {{ $role === 'guru' ? 'Lihat Kuis' : 'Kerjakan Kuis' }}
+                            </a>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        @endif
+    </section>
+
+    <section class="meta">
+        <div class="section-title">
+            <div>
                 <strong>Daftar Sub Bab</strong>
                 <p>{{ $role === 'guru' ? 'Kelola pembahasan bertahap di bawah bab utama ini.' : 'Buka sub bab untuk membaca isi materi sekaligus menambah progress belajar.' }}</p>
             </div>
@@ -99,9 +147,9 @@
         @if ($subsections->isEmpty())
             <div class="empty-state">Belum ada sub bab pada materi ini.</div>
         @else
-            <div class="subsection-list">
+            <div class="subsection-grid">
                 @foreach ($subsections as $subsection)
-                    <article class="subsection-item">
+                    <article class="subsection-item card-mode">
                         <div class="subsection-content">
                             <span class="subject-badge">Sub Bab {{ $subsection->position }}</span>
                             <h3>{{ $subsection->title }}</h3>

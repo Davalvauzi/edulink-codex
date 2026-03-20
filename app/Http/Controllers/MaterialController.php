@@ -56,6 +56,7 @@ class MaterialController extends Controller
         $material->load([
             'creator',
             'subject.creator',
+            'quizzes' => fn ($query) => $query->withCount('questions')->with('creator'),
             'subsections' => fn ($query) => $query->with(
                 $user->role === 'siswa'
                     ? ['creator', 'progressRecords' => fn ($progressQuery) => $progressQuery->where('user_id', $user->id)]
@@ -74,6 +75,7 @@ class MaterialController extends Controller
             'user' => $user,
             'subject' => $subject,
             'material' => $material,
+            'quizzes' => $material->quizzes,
             'subsections' => $subsections,
             'completedSubsections' => $completedSubsections,
             'totalSubsections' => $material->subsections->count(),

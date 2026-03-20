@@ -69,4 +69,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(MaterialSubsectionProgress::class);
     }
+
+    public function quizzes(): HasMany
+    {
+        return $this->hasMany(Quiz::class, 'created_by');
+    }
+
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
 }

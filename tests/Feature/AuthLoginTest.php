@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Material;
 use App\Models\MaterialSubsection;
+use App\Models\Quiz;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -416,5 +417,142 @@ class AuthLoginTest extends TestCase
         $materialPageResponse->assertSee('1 dari 2 sub bab');
         $materialPageResponse->assertSee('50%');
         $materialPageResponse->assertSee('Sudah Dibaca');
+    }
+
+    public function test_guru_can_create_multiple_choice_quiz_for_material(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Biologi',
+            'kelas' => '11',
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Sistem Pernapasan',
+            'description' => '<p>Materi sistem pernapasan</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $response = $this->actingAs($guru)->post(route('guru.materials.quizzes.store', [$subject, $material]), [
+            'title' => 'Latihan Sistem Pernapasan',
+            'description' => 'Kerjakan semua soal berikut.',
+            'questions' => [
+                [
+                    'question' => 'Organ utama pernapasan manusia adalah?',
+                    'option_a' => 'Jantung',
+                    'option_b' => 'Paru-paru',
+                    'option_c' => 'Ginjal',
+                    'option_d' => 'Lambung',
+                    'correct_option' => 'b',
+                    'image_url' => 'https://example.com/paru-paru.jpg',
+                    'explanation' => 'Paru-paru berfungsi sebagai tempat pertukaran oksigen dan karbon dioksida.',
+                ],
+            ],
+        ]);
+
+        $quiz = Quiz::query()->where('material_id', $material->id)->firstOrFail();
+
+        $response->assertRedirect(route('quizzes.show', [$subject, $material, $quiz]));
+        $this->assertDatabaseHas('quizzes', [
+            'material_id' => $material->id,
+            'title' => 'Latihan Sistem Pernapasan',
+            'created_by' => $guru->id,
+        ]);
+        $this->assertDatabaseHas('quiz_questions', [
+            'quiz_id' => $quiz->id,
+            'correct_option' => 'b',
+            'image_url' => 'https://example.com/paru-paru.jpg',
+        ]);
+    }
+
+    public function test_siswa_can_submit_quiz_and_see_score_with_explanation_for_wrong_answers(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $siswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => '10',
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Matematika',
+            'kelas' => '10',
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Pecahan',
+            'description' => '<p>Materi pecahan</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $quiz = $material->quizzes()->create([
+            'title' => 'Latihan Pecahan',
+            'description' => 'Pilih jawaban yang tepat.',
+            'created_by' => $guru->id,
+        ]);
+
+        $firstQuestion = $quiz->questions()->create([
+            'question' => 'Hasil 1/2 + 1/2 adalah?',
+            'option_a' => '1',
+            'option_b' => '2',
+            'option_c' => '1/2',
+            'option_d' => '0',
+            'correct_option' => 'a',
+            'explanation' => 'Dua pecahan setengah jika dijumlahkan sama dengan satu utuh.',
+            'position' => 1,
+        ]);
+
+        $secondQuestion = $quiz->questions()->create([
+            'question' => 'Hasil 3/4 - 1/4 adalah?',
+            'option_a' => '1',
+            'option_b' => '1/4',
+            'option_c' => '1/2',
+            'option_d' => '3/4',
+            'correct_option' => 'c',
+            'explanation' => 'Karena pembilangnya 3 dikurangi 1 menjadi 2, sehingga hasilnya 2/4 atau 1/2.',
+            'position' => 2,
+        ]);
+
+        $response = $this->actingAs($siswa)->post(route('quizzes.submit', [$subject, $material, $quiz]), [
+            'answers' => [
+                $firstQuestion->id => 'a',
+                $secondQuestion->id => 'a',
+            ],
+        ]);
+
+        $response->assertRedirect(route('quizzes.show', [$subject, $material, $quiz]));
+
+        $showResponse = $this->actingAs($siswa)->get(route('quizzes.show', [$subject, $material, $quiz]));
+
+        $showResponse->assertOk();
+        $showResponse->assertSee('Skor Terakhir');
+        $showResponse->assertSee('50');
+        $showResponse->assertSee('Review Jawaban Salah');
+        $showResponse->assertSee('Jawaban Benar: C');
+        $showResponse->assertSee('hasilnya 2/4 atau 1/2.', false);
+
+        $this->assertDatabaseHas('quiz_attempts', [
+            'quiz_id' => $quiz->id,
+            'user_id' => $siswa->id,
+            'score' => 50,
+            'correct_answers' => 1,
+            'total_questions' => 2,
+        ]);
+        $this->assertDatabaseHas('quiz_attempt_answers', [
+            'quiz_question_id' => $secondQuestion->id,
+            'selected_option' => 'a',
+            'is_correct' => false,
+        ]);
     }
 }
