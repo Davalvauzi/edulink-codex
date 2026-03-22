@@ -31,9 +31,25 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:admin')
         ->name('admin.dashboard');
 
+    Route::get('/admin/materials', [DashboardController::class, 'adminMaterials'])
+        ->middleware('role:admin')
+        ->name('admin.materials');
+
+    Route::get('/admin/quizzes', [DashboardController::class, 'adminQuizzes'])
+        ->middleware('role:admin')
+        ->name('admin.quizzes');
+
     Route::get('/guru/dashboard', [DashboardController::class, 'guru'])
         ->middleware('role:guru')
         ->name('guru.dashboard');
+
+    Route::get('/guru/materials', [DashboardController::class, 'guruMaterials'])
+        ->middleware('role:guru')
+        ->name('guru.materials');
+
+    Route::get('/guru/quizzes', [DashboardController::class, 'guruQuizzes'])
+        ->middleware('role:guru')
+        ->name('guru.quizzes');
 
     Route::get('/guru/subjects/create', [SubjectController::class, 'create'])
         ->middleware('role:guru')
@@ -79,6 +95,13 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('material')
         ->whereNumber('quiz')
         ->name('quizzes.show');
+
+    Route::get('/subjects/{subject}/materials/{material}/quizzes/{quiz}/attempts/{attempt}/print', [QuizController::class, 'printAttempt'])
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('quiz')
+        ->whereNumber('attempt')
+        ->name('quizzes.attempts.print');
 
     Route::post('/subjects/{subject}/materials/{material}/quizzes/{quiz}/submit', [QuizController::class, 'submit'])
         ->middleware('role:siswa')
@@ -147,6 +170,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/siswa/dashboard', [DashboardController::class, 'siswa'])
         ->middleware('role:siswa')
         ->name('siswa.dashboard');
+
+    Route::get('/siswa/materials', [DashboardController::class, 'siswaMaterials'])
+        ->middleware('role:siswa')
+        ->name('siswa.materials');
+
+    Route::get('/siswa/quizzes', [DashboardController::class, 'siswaQuizzes'])
+        ->middleware('role:siswa')
+        ->name('siswa.quizzes');
 
     Route::get('/siswa/profile', [DashboardController::class, 'showSiswaProfile'])
         ->middleware('role:siswa')

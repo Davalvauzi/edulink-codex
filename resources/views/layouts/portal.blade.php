@@ -74,6 +74,19 @@
             gap: 14px;
         }
 
+        .nav-group {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-label {
+            color: rgba(238, 251, 246, 0.58);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
         .nav a,
         .nav .static-item {
             display: block;
@@ -84,6 +97,11 @@
             text-decoration: none;
             font-weight: 700;
             font-size: 14px;
+        }
+
+        .nav a.active {
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
         .nav .static-item span,
@@ -97,6 +115,14 @@
 
         .main {
             padding: 28px;
+        }
+
+        .sidebar-context {
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            gap: 12px;
         }
 
         .alert {
@@ -823,7 +849,30 @@
             </div>
 
             <div class="nav">
-                @yield('sidebar')
+                @if (in_array($role, ['admin', 'guru', 'siswa'], true))
+                    <div class="nav-group">
+                        <span class="nav-label">Navigasi</span>
+                        <a class="{{ request()->routeIs($role.'.dashboard') ? 'active' : '' }}" href="{{ route($role.'.dashboard') }}">
+                            Dashboard
+                            <span>Ringkasan dan progress pembelajaran</span>
+                        </a>
+                        <a class="{{ request()->routeIs($role.'.materials') || request()->routeIs('subjects.show') || request()->routeIs('materials.*') || request()->routeIs('guru.subjects.materials.*') || request()->routeIs('guru.materials.subsections.*') ? 'active' : '' }}" href="{{ route($role.'.materials') }}">
+                            Materi
+                            <span>Buka mapel, bab, dan sub bab</span>
+                        </a>
+                        <a class="{{ request()->routeIs($role.'.quizzes') || request()->routeIs('quizzes.*') || request()->routeIs('guru.materials.quizzes.*') ? 'active' : '' }}" href="{{ route($role.'.quizzes') }}">
+                            Kuis
+                            <span>Lihat latihan soal dan hasilnya</span>
+                        </a>
+                    </div>
+                @endif
+
+                @hasSection('sidebar')
+                    <div class="sidebar-context">
+                        <span class="nav-label">Konteks</span>
+                        @yield('sidebar')
+                    </div>
+                @endif
             </div>
         </aside>
 

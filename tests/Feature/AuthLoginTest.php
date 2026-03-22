@@ -235,6 +235,20 @@ class AuthLoginTest extends TestCase
         $response->assertSee('Biologi');
     }
 
+    public function test_guru_quizzes_page_shows_empty_state_when_no_quiz_exists(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $response = $this->actingAs($guru)->get(route('guru.quizzes'));
+
+        $response->assertOk();
+        $response->assertSee('Belum ada kuis yang tersedia saat ini.');
+        $response->assertSee('Kembali ke Materi');
+    }
+
     public function test_material_has_dedicated_detail_page(): void
     {
         $siswa = User::factory()->create([
@@ -590,9 +604,10 @@ class AuthLoginTest extends TestCase
         $showResponse->assertOk();
         $showResponse->assertSee('Skor Terakhir');
         $showResponse->assertSee('50');
-        $showResponse->assertSee('Review Jawaban Salah');
-        $showResponse->assertSee('Jawaban Benar: C');
+        $showResponse->assertSee('Hasil Pengerjaan');
+        $showResponse->assertSee('Jawaban benar: C');
         $showResponse->assertSee('hasilnya 2/4 atau 1/2.', false);
+        $showResponse->assertSee('Print PDF');
 
         $this->assertDatabaseHas('quiz_attempts', [
             'quiz_id' => $quiz->id,
@@ -606,5 +621,66 @@ class AuthLoginTest extends TestCase
             'selected_option' => 'a',
             'is_correct' => false,
         ]);
+    }
+
+    public function test_siswa_can_open_printable_quiz_result_page(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $siswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => '10',
+            'name' => 'Siswa Cetak',
+            'email' => 'cetak@example.com',
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Bahasa Inggris',
+            'kelas' => '10',
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Reading',
+            'description' => '<p>Materi reading</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $quiz = $material->quizzes()->create([
+            'title' => 'Kuis Reading',
+            'description' => 'Jawab dengan teliti.',
+            'created_by' => $guru->id,
+        ]);
+
+        $question = $quiz->questions()->create([
+            'question' => 'Choose the correct answer.',
+            'option_a' => 'A',
+            'option_b' => 'B',
+            'option_c' => 'C',
+            'option_d' => 'D',
+            'correct_option' => 'b',
+            'explanation' => 'Pilihan yang benar adalah B.',
+            'position' => 1,
+        ]);
+
+        $this->actingAs($siswa)->post(route('quizzes.submit', [$subject, $material, $quiz]), [
+            'answers' => [
+                $question->id => 'a',
+            ],
+        ]);
+
+        $attempt = \App\Models\QuizAttempt::query()->where('quiz_id', $quiz->id)->where('user_id', $siswa->id)->firstOrFail();
+
+        $response = $this->actingAs($siswa)->get(route('quizzes.attempts.print', [$subject, $material, $quiz, $attempt]));
+
+        $response->assertOk();
+        $response->assertSee('Hasil Kuis');
+        $response->assertSee('Siswa Cetak');
+        $response->assertSee('Jawaban siswa: A');
+        $response->assertSee('Jawaban benar: B');
     }
 }

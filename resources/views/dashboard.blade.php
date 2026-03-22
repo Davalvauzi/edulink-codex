@@ -2,27 +2,13 @@
 
 @section('sidebar')
     <div class="static-item">
-        Dashboard {{ ucfirst($role) }}
-        <span>{{ $title }}</span>
+        Dashboard Aktif
+        <span>{{ ucfirst($role) }}</span>
     </div>
-    <div class="static-item">
-        Status Akun
-        <span>Role aktif: {{ $role }}</span>
-    </div>
-    @if ($role === 'siswa' && isset($user))
+    @if ($role === 'siswa' && isset($selectedKelas))
         <div class="static-item">
-            Kelas Aktif
-            <span>Kelas {{ $user->kelas }}</span>
-        </div>
-        <div class="static-item">
-            Filter Materi
+            Filter Kelas
             <span>Menampilkan kelas {{ $selectedKelas }}</span>
-        </div>
-    @endif
-    @if ($role === 'guru')
-        <div class="static-item">
-            Kelola Materi
-            <span>Tambah mapel dan materi lewat halaman khusus</span>
         </div>
     @endif
 @endsection
@@ -47,27 +33,62 @@
 @endsection
 
 @section('content')
-    @if ($role === 'siswa' && isset($user))
-        <section class="cards">
+    <section class="cards">
+        @foreach ($dashboardStats ?? [] as $stat)
             <article class="card">
-                <strong>Ringkasan Akademik</strong>
-                <p>Buka mata pelajaran lalu lanjut ke halaman detail tiap materi untuk membaca isi lengkapnya.</p>
+                <strong>{{ $stat['label'] }}</strong>
+                <h2 style="margin: 0 0 8px; font-size: 30px;">{{ $stat['value'] }}</h2>
+                <p>{{ $stat['detail'] }}</p>
             </article>
-            <article class="card">
-                <strong>Informasi Kelas</strong>
-                <p>Anda terdaftar sebagai siswa kelas {{ $user->kelas }} dan dashboard otomatis menampilkan daftar mapel terkait.</p>
-            </article>
-            <article class="card">
-                <strong>Halaman Profil</strong>
-                <p>Tombol profile di kanan atas membuka halaman khusus untuk mengubah data siswa.</p>
-            </article>
-        </section>
+        @endforeach
+    </section>
 
+    @if ($role === 'siswa' && isset($totalSubsections))
+        <section class="meta">
+            <div class="section-title">
+                <div>
+                    <strong>Progress Pembelajaran</strong>
+                    <p>Progress belajar siswa diringkas dari sub bab yang sudah dibuka pada kelas yang sedang dipilih.</p>
+                </div>
+            </div>
+
+            <div class="progress-panel">
+                <div>
+                    <strong>{{ $completedSubsections }} dari {{ $totalSubsections }} sub bab selesai</strong>
+                    <p>Progress keseluruhan untuk kelas {{ $selectedKelas }} saat ini {{ $progressPercentage }}%.</p>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: {{ $progressPercentage }}%;"></div>
+                </div>
+                <span class="progress-value">{{ $progressPercentage }}%</span>
+            </div>
+        </section>
+    @endif
+
+    <section class="meta">
+        <div class="section-title">
+            <div>
+                <strong>Fokus Dashboard</strong>
+                <p>Informasi yang dulu tersebar di sidebar sekarang diringkas di dashboard agar halaman lain lebih bersih.</p>
+            </div>
+        </div>
+
+        <div class="subjects-grid">
+            @foreach ($progressHighlights ?? [] as $highlight)
+                <article class="subject-item">
+                    <h3>{{ $highlight['title'] }}</h3>
+                    <p>{{ $highlight['description'] }}</p>
+                </article>
+            @endforeach
+        </div>
+    </section>
+
+    @if ($role === 'siswa' && isset($user))
         <section class="meta">
             <div class="section-title">
                 <div>
                     <strong>Mata Pelajaran Berdasarkan Kelas</strong>
-                    <p>Gunakan filter kelas lalu klik mata pelajaran untuk melihat daftar materi.</p>
+                    <p>Gunakan filter kelas lalu buka menu Materi untuk melihat semua bab secara lebih fokus.</p>
                 </div>
             </div>
 
@@ -83,7 +104,7 @@
                 <button class="btn btn-primary" type="submit">Terapkan Filter</button>
             </form>
 
-            @if ($subjects->isEmpty())
+            @if (($subjects ?? collect())->isEmpty())
                 <div class="empty-state">Belum ada mata pelajaran untuk kelas {{ $selectedKelas }}.</div>
             @else
                 <div class="subjects-grid">
@@ -91,7 +112,7 @@
                         <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
                             <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
                             <h3>{{ $subject->name }}</h3>
-                            <p>{{ $subject->materials_count }} materi tersedia. Klik untuk membuka daftar materi.</p>
+                            <p>{{ $subject->materials_count }} materi tersedia. Buka mapel ini dari halaman Materi atau langsung dari sini.</p>
                         </a>
                     @endforeach
                 </div>
@@ -101,12 +122,12 @@
         <section class="meta">
             <div class="section-title">
                 <div>
-                    <strong>Daftar Mata Pelajaran</strong>
-                    <p>Klik mata pelajaran untuk melihat daftar materi, membuka detail materi, atau menambah materi baru.</p>
+                    <strong>Mapel Terbaru</strong>
+                    <p>Dashboard guru menampilkan progres konten, sementara detail lengkap bisa dibuka dari menu Materi dan Kuis.</p>
                 </div>
             </div>
 
-            @if ($subjects->isEmpty())
+            @if (($subjects ?? collect())->isEmpty())
                 <div class="empty-state">Belum ada mata pelajaran yang tersimpan.</div>
             @else
                 <div class="subjects-grid">
@@ -114,29 +135,34 @@
                         <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
                             <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
                             <h3>{{ $subject->name }}</h3>
-                            <p>{{ $subject->materials_count }} materi tersimpan. Klik untuk membuka halaman mapel.</p>
+                            <p>{{ $subject->materials_count }} materi dan {{ $subject->material_subsections_count }} sub bab sudah tersedia.</p>
                         </a>
                     @endforeach
                 </div>
             @endif
         </section>
-    @else
+
         <section class="meta">
-            <strong>Ringkasan Dashboard</strong>
-            <div class="meta-grid">
-                <div class="meta-item">
-                    <span>Role</span>
-                    <strong>{{ ucfirst($role) }}</strong>
-                </div>
-                <div class="meta-item">
-                    <span>Akses</span>
-                    <strong>Aktif</strong>
-                </div>
-                <div class="meta-item">
-                    <span>Portal</span>
-                    <strong>EduLink Codex</strong>
+            <div class="section-title">
+                <div>
+                    <strong>Kuis Terbaru</strong>
+                    <p>Daftar ini membantu guru memantau kuis yang baru dibuat sebelum membuka halaman Kuis penuh.</p>
                 </div>
             </div>
+
+            @if (($recentQuizzes ?? collect())->isEmpty())
+                <div class="empty-state">Belum ada kuis yang dibuat pada materi.</div>
+            @else
+                <div class="quiz-grid">
+                    @foreach ($recentQuizzes as $quiz)
+                        <a class="subject-item" href="{{ route('quizzes.show', [$quiz->material->subject, $quiz->material, $quiz]) }}">
+                            <span class="subject-badge">{{ $quiz->material->subject->name }}</span>
+                            <h3>{{ $quiz->title }}</h3>
+                            <p>{{ $quiz->questions_count }} soal dan {{ $quiz->attempts_count }} attempt siswa.</p>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         </section>
     @endif
 @endsection

@@ -168,6 +168,26 @@ class QuizController extends Controller
             ->with('success', 'Kuis selesai dikerjakan. Skor Anda: '.$attempt->score.'.');
     }
 
+    public function printAttempt(Request $request, Subject $subject, Material $material, Quiz $quiz, QuizAttempt $attempt): View
+    {
+        $this->ensureMaterialBelongsToSubject($subject, $material);
+        $this->ensureQuizBelongsToMaterial($material, $quiz);
+        abort_if($attempt->quiz_id !== $quiz->id, 404);
+
+        $user = $request->user();
+        abort_if($user->role === 'siswa' && $attempt->user_id !== $user->id, 403);
+        abort_if(! in_array($user->role, ['guru', 'siswa', 'admin'], true), 403);
+
+        $attempt->load(['user', 'answers.question', 'quiz.material.subject']);
+
+        return view('quizzes.print', [
+            'attempt' => $attempt,
+            'quiz' => $quiz,
+            'material' => $material,
+            'subject' => $subject,
+        ]);
+    }
+
     private function validateQuiz(Request $request): array
     {
         return $request->validate([

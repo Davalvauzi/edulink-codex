@@ -2,6 +2,7 @@
 
 @php
     $wrongAnswers = $latestAttempt?->answers->where('is_correct', false) ?? collect();
+    $resultAnswers = $latestAttempt?->answers->sortBy(fn ($answer) => $answer->question->position) ?? collect();
 @endphp
 
 @section('sidebar')
@@ -97,6 +98,12 @@
                     </div>
                     <div class="result-score">{{ $latestAttempt->score }}</div>
                 </div>
+
+                <div class="subsection-actions">
+                    <a class="btn btn-soft" href="{{ route('quizzes.attempts.print', [$subject, $material, $quiz, $latestAttempt]) }}" target="_blank" rel="noopener">
+                        Print PDF
+                    </a>
+                </div>
             @endif
 
             <form class="stack" method="POST" action="{{ route('quizzes.submit', [$subject, $material, $quiz]) }}">
@@ -136,37 +143,45 @@
             @if ($latestAttempt)
                 <section class="meta stack">
                     <div>
-                        <strong>Review Jawaban Salah</strong>
-                        <p>Pembahasan hanya ditampilkan untuk soal yang belum tepat agar siswa bisa langsung belajar dari hasil kuis.</p>
+                        <strong>Hasil Pengerjaan</strong>
+                        <p>Setiap soal sekarang menampilkan status benar atau salah, jawaban siswa, jawaban benar, dan penjelasan.</p>
+                    </div>
+
+                    <div class="question-list">
+                        @foreach ($resultAnswers as $answer)
+                            <article class="question-card compact">
+                                <div class="question-card-header">
+                                    <div>
+                                        <strong>Soal {{ $answer->question->position }}</strong>
+                                        <p>{{ $answer->is_correct ? 'Jawaban Anda sudah tepat.' : 'Periksa kembali konsep pada soal ini.' }}</p>
+                                    </div>
+                                    <span class="answer-pill {{ $answer->is_correct ? '' : 'wrong' }}">
+                                        {{ $answer->is_correct ? 'Benar' : 'Salah' }}
+                                    </span>
+                                </div>
+                                @if ($answer->question->image_source)
+                                    <div class="question-media">
+                                        <img src="{{ $answer->question->image_source }}" alt="Gambar soal {{ $answer->question->position }}">
+                                        <div class="question-media-caption">{{ $answer->question->image_name ?: 'Gambar dari tautan eksternal' }}</div>
+                                    </div>
+                                @endif
+                                <p class="question-text">{{ $answer->question->question }}</p>
+                                <div class="explanation-card">
+                                    <strong>Jawaban Anda: {{ strtoupper($answer->selected_option) }}</strong>
+                                    <p>Jawaban benar: {{ strtoupper($answer->question->correct_option) }}</p>
+                                </div>
+                                @if (! $answer->is_correct)
+                                    <div class="explanation-card">
+                                        <strong>Penjelasan</strong>
+                                        <p>{{ $answer->question->explanation ?: 'Belum ada pembahasan tambahan dari guru untuk soal ini.' }}</p>
+                                    </div>
+                                @endif
+                            </article>
+                        @endforeach
                     </div>
 
                     @if ($wrongAnswers->isEmpty())
                         <div class="empty-state">Semua jawaban pada percobaan terakhir sudah benar. Bagus sekali.</div>
-                    @else
-                        <div class="question-list">
-                            @foreach ($wrongAnswers as $answer)
-                                <article class="question-card compact">
-                                    <div class="question-card-header">
-                                        <div>
-                                            <strong>Soal {{ $answer->question->position }}</strong>
-                                            <p>Fokus pada pembahasan agar konsep yang keliru langsung diperbaiki.</p>
-                                        </div>
-                                        <span class="answer-pill wrong">Jawaban Anda {{ strtoupper($answer->selected_option) }}</span>
-                                    </div>
-                                    @if ($answer->question->image_source)
-                                        <div class="question-media">
-                                            <img src="{{ $answer->question->image_source }}" alt="Gambar soal {{ $answer->question->position }}">
-                                            <div class="question-media-caption">{{ $answer->question->image_name ?: 'Gambar dari tautan eksternal' }}</div>
-                                        </div>
-                                    @endif
-                                    <p class="question-text">{{ $answer->question->question }}</p>
-                                    <div class="explanation-card">
-                                        <strong>Jawaban Benar: {{ strtoupper($answer->question->correct_option) }}</strong>
-                                        <p>{{ $answer->question->explanation ?: 'Belum ada pembahasan tambahan dari guru untuk soal ini.' }}</p>
-                                    </div>
-                                </article>
-                            @endforeach
-                        </div>
                     @endif
                 </section>
             @endif
