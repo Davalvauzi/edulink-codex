@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <form class="material-form" method="POST" action="{{ route('guru.materials.subsections.store', [$subject, $material]) }}">
+        <form class="material-form" method="POST" action="{{ route('guru.materials.subsections.store', [$subject, $material]) }}" enctype="multipart/form-data">
             @csrf
             @include('materials.subsections._form', ['subsection' => null, 'editorId' => 'create-subsection-editor', 'inputId' => 'subsection-description'])
             <button class="btn btn-primary" type="submit">Simpan Sub Bab</button>

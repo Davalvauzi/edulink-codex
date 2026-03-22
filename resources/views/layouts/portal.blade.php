@@ -854,6 +854,10 @@
                 </div>
 
                 <div class="actions">
+                    @if (in_array($role, ['admin', 'guru', 'siswa'], true))
+                        <a class="btn btn-soft" href="{{ route($role.'.dashboard') }}">Home</a>
+                    @endif
+
                     @yield('actions')
 
                     <form method="POST" action="{{ route('logout') }}">

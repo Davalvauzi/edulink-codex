@@ -8,6 +8,7 @@ use App\Models\MaterialSubsectionProgress;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class MaterialSubsectionController extends Controller
@@ -32,10 +33,14 @@ class MaterialSubsectionController extends Controller
         $this->ensureMaterialBelongsToSubject($subject, $material);
 
         $data = $this->validateSubsection($request);
+        [$imagePath, $imageName] = $this->storeUploadedImage($request);
 
         $material->subsections()->create([
             'title' => $data['title'],
             'description' => $this->sanitizeDescription($data['description']),
+            'image_path' => $imagePath,
+            'image_name' => $imageName,
+            'image_url' => $data['image_url'] ?? null,
             'position' => $data['position'],
             'created_by' => $request->user()->id,
         ]);
@@ -83,6 +88,9 @@ class MaterialSubsectionController extends Controller
             ? $material->subsections->filter(fn (MaterialSubsection $item) => $item->progressRecords->isNotEmpty())->count()
             : $material->subsections->filter(fn (MaterialSubsection $item) => $item->progressRecords->isNotEmpty())->count();
 
+        $nextSubsection = $material->subsections
+            ->first(fn (MaterialSubsection $item) => $item->position > $subsection->position || ($item->position === $subsection->position && $item->id > $subsection->id));
+
         return view('materials.subsections.show', [
             'title' => $subsection->title,
             'role' => $user->role,
@@ -90,6 +98,7 @@ class MaterialSubsectionController extends Controller
             'subject' => $subject,
             'material' => $material,
             'subsection' => $subsection,
+            'nextSubsection' => $nextSubsection,
             'totalSubsections' => $totalSubsections,
             'completedSubsections' => $completedSubsections,
             'progressPercentage' => $totalSubsections > 0 ? (int) round(($completedSubsections / $totalSubsections) * 100) : 0,
@@ -119,10 +128,14 @@ class MaterialSubsectionController extends Controller
         $this->ensureSubsectionBelongsToMaterial($material, $subsection);
 
         $data = $this->validateSubsection($request);
+        [$imagePath, $imageName, $imageUrl] = $this->resolveUpdatedImage($request, $subsection, $data);
 
         $subsection->update([
             'title' => $data['title'],
             'description' => $this->sanitizeDescription($data['description']),
+            'image_path' => $imagePath,
+            'image_name' => $imageName,
+            'image_url' => $imageUrl,
             'position' => $data['position'],
         ]);
 
@@ -137,6 +150,10 @@ class MaterialSubsectionController extends Controller
         $this->ensureMaterialBelongsToSubject($subject, $material);
         $this->ensureSubsectionBelongsToMaterial($material, $subsection);
 
+        if ($subsection->image_path) {
+            Storage::disk('public')->delete($subsection->image_path);
+        }
+
         $subsection->delete();
 
         return redirect()
@@ -150,7 +167,42 @@ class MaterialSubsectionController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'position' => ['required', 'integer', 'min:1'],
             'description' => ['required', 'string'],
+            'image_url' => ['nullable', 'url'],
+            'image_file' => ['nullable', 'file', 'image', 'max:4096'],
         ]);
+    }
+
+    private function storeUploadedImage(Request $request): array
+    {
+        if (! $request->hasFile('image_file')) {
+            return [null, null];
+        }
+
+        $uploadedFile = $request->file('image_file');
+
+        return [
+            $uploadedFile->store('material-subsections', 'public'),
+            $uploadedFile->getClientOriginalName(),
+        ];
+    }
+
+    private function resolveUpdatedImage(Request $request, MaterialSubsection $subsection, array $data): array
+    {
+        if ($request->hasFile('image_file')) {
+            if ($subsection->image_path) {
+                Storage::disk('public')->delete($subsection->image_path);
+            }
+
+            [$imagePath, $imageName] = $this->storeUploadedImage($request);
+
+            return [$imagePath, $imageName, $data['image_url'] ?? null];
+        }
+
+        return [
+            $subsection->image_path,
+            $subsection->image_name,
+            $data['image_url'] ?? $subsection->image_url,
+        ];
     }
 
     private function ensureMaterialBelongsToSubject(Subject $subject, Material $material): void

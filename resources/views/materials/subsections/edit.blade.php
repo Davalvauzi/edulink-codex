@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <form class="material-form" method="POST" action="{{ route('guru.materials.subsections.update', [$subject, $material, $subsection]) }}">
+        <form class="material-form" method="POST" action="{{ route('guru.materials.subsections.update', [$subject, $material, $subsection]) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             @include('materials.subsections._form', ['subsection' => $subsection, 'editorId' => 'edit-subsection-editor', 'inputId' => 'subsection-description'])

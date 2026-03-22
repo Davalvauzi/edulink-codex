@@ -14,6 +14,21 @@
     <input id="position" type="number" min="1" name="position" value="{{ old('position', $subsection->position ?? 1) }}" required>
 </div>
 
+<div class="field">
+    <label for="image_url">Link Gambar Sub Bab</label>
+    <input id="image_url" type="url" name="image_url" value="{{ old('image_url', $subsection->image_url ?? '') }}" placeholder="https://contoh.com/gambar-sub-bab.jpg">
+</div>
+
+<div class="field">
+    <label for="image_file">Upload Gambar Sub Bab</label>
+    <input id="image_file" type="file" name="image_file" accept="image/*">
+    @if (! empty($subsection?->image_name))
+        <p class="muted-note">Gambar saat ini: {{ $subsection->image_name }}</p>
+    @else
+        <p class="muted-note">Upload akan diprioritaskan jika link dan file sama-sama diisi.</p>
+    @endif
+</div>
+
 <div class="field field-full">
     <label for="{{ $inputId }}">Isi Sub Bab</label>
     <div class="toolbar" data-editor-toolbar>

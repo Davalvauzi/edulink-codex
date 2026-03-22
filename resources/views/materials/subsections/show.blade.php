@@ -46,6 +46,19 @@
         </article>
     </section>
 
+    <section class="meta stack">
+        <div>
+            <strong>Isi Sub Bab</strong>
+            @if ($subsection->image_source)
+                <div class="question-media" style="margin-top: 14px;">
+                    <img src="{{ $subsection->image_source }}" alt="Gambar sub bab {{ $subsection->title }}">
+                    <div class="question-media-caption">{{ $subsection->image_name ?: 'Gambar dari tautan eksternal' }}</div>
+                </div>
+            @endif
+            <div class="prose">{!! $subsection->description !!}</div>
+        </div>
+    </section>
+
     @if ($role === 'siswa')
         <section class="meta">
             <div class="progress-panel">
@@ -61,10 +74,17 @@
         </section>
     @endif
 
-    <section class="meta stack">
-        <div>
-            <strong>Isi Sub Bab</strong>
-            <div class="prose">{!! $subsection->description !!}</div>
-        </div>
-    </section>
+    @if ($nextSubsection)
+        <section class="meta compact">
+            <div class="section-title">
+                <div>
+                    <strong>Lanjut Belajar</strong>
+                    <p>Setelah selesai membaca sub bab ini, lanjut ke sub bab berikutnya tanpa kembali ke daftar materi.</p>
+                </div>
+                <a class="btn btn-primary btn-section" href="{{ route('materials.subsections.show', [$subject, $material, $nextSubsection]) }}">
+                    Selanjutnya
+                </a>
+            </div>
+        </section>
+    @endif
 @endsection

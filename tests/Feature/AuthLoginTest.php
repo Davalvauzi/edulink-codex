@@ -348,6 +348,7 @@ class AuthLoginTest extends TestCase
             'title' => 'Bentuk Aljabar',
             'position' => 1,
             'description' => '<p>Isi sub bab bentuk aljabar</p>',
+            'image_url' => 'https://example.com/sub-bab.jpg',
         ]);
 
         $response->assertRedirect(route('materials.show', [$subject, $material]));
@@ -357,6 +358,7 @@ class AuthLoginTest extends TestCase
             'title' => 'Bentuk Aljabar',
             'position' => 1,
             'created_by' => $guru->id,
+            'image_url' => 'https://example.com/sub-bab.jpg',
         ]);
     }
 
@@ -417,6 +419,56 @@ class AuthLoginTest extends TestCase
         $materialPageResponse->assertSee('1 dari 2 sub bab');
         $materialPageResponse->assertSee('50%');
         $materialPageResponse->assertSee('Sudah Dibaca');
+    }
+
+    public function test_subsection_detail_shows_next_button_and_supports_image(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $siswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => '11',
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'IPA',
+            'kelas' => '11',
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Ekosistem',
+            'description' => '<p>Materi ekosistem</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $currentSubsection = MaterialSubsection::query()->create([
+            'material_id' => $material->id,
+            'title' => 'Pengertian Ekosistem',
+            'description' => '<p>Isi sub bab pertama</p>',
+            'image_url' => 'https://example.com/ekosistem.jpg',
+            'position' => 1,
+            'created_by' => $guru->id,
+        ]);
+
+        MaterialSubsection::query()->create([
+            'material_id' => $material->id,
+            'title' => 'Komponen Ekosistem',
+            'description' => '<p>Isi sub bab kedua</p>',
+            'position' => 2,
+            'created_by' => $guru->id,
+        ]);
+
+        $response = $this->actingAs($siswa)->get(route('materials.subsections.show', [$subject, $material, $currentSubsection]));
+
+        $response->assertOk();
+        $response->assertSee('Isi Sub Bab');
+        $response->assertSee('Selanjutnya');
+        $response->assertSee('https://example.com/ekosistem.jpg');
     }
 
     public function test_guru_can_create_multiple_choice_quiz_for_material(): void

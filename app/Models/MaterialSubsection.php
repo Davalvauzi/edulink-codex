@@ -12,6 +12,9 @@ class MaterialSubsection extends Model
         'material_id',
         'title',
         'description',
+        'image_path',
+        'image_name',
+        'image_url',
         'position',
         'created_by',
     ];
@@ -29,5 +32,14 @@ class MaterialSubsection extends Model
     public function progressRecords(): HasMany
     {
         return $this->hasMany(MaterialSubsectionProgress::class, 'material_subsection_id');
+    }
+
+    public function getImageSourceAttribute(): ?string
+    {
+        if ($this->image_path) {
+            return asset('storage/'.$this->image_path);
+        }
+
+        return $this->image_url;
     }
 }
