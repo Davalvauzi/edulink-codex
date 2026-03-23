@@ -19,6 +19,9 @@
 @section('subtitle', $role === 'siswa' ? 'Membuka sub bab ini akan dicatat sebagai progres belajar pada bab utama.' : 'Sub bab ini merupakan bagian dari materi utama dan tetap berada di bawah bab induk.')
 
 @section('actions')
+    @if ($role === 'siswa')
+        <a class="btn btn-primary" href="{{ route('siswa.ai.index', ['subject' => $subject->id, 'material' => $material->id, 'subsection' => $subsection->id]) }}">Tanya AI</a>
+    @endif
     @if ($role === 'guru')
         <a class="btn btn-soft" href="{{ route('guru.materials.subsections.edit', [$subject, $material, $subsection]) }}">Edit</a>
         <form method="POST" action="{{ route('guru.materials.subsections.destroy', [$subject, $material, $subsection]) }}" onsubmit="return confirm('Hapus sub bab ini?');">

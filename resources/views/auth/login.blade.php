@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login EduLink Codex</title>
+    <title>Login EduLink </title>
     <style>
         :root {
             color-scheme: light;
@@ -132,10 +133,11 @@
         }
     </style>
 </head>
+
 <body>
     <div class="card">
-        <h1>EduLink Codex</h1>
-        <p>Login sederhana tanpa Breeze, menggunakan auth Laravel bawaan dan role berbasis `users.role`.</p>
+        <h1>EduLink </h1>
+        <p>Masuk ke website edulink menggunakan akun yang sudah terdaftar.</p>
 
         @if ($errors->any())
             <div class="error">{{ $errors->first() }}</div>
@@ -158,16 +160,17 @@
             <button type="submit">Masuk</button>
         </form>
 
-        <div class="demo">
+        {{-- <div class="demo">
             <strong>Akun demo</strong><br>
             admin@edulink.test / password<br>
             guru@edulink.test / password<br>
             siswa@edulink.test / password
-        </div>
+        </div> --}}
 
         <div class="register-link">
             Belum punya akun siswa? <a href="{{ route('register') }}">Daftar di sini</a>
         </div>
     </div>
 </body>
+
 </html>

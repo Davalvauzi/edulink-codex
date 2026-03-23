@@ -24,6 +24,9 @@
 @section('subtitle', $role === 'guru' ? 'Guru dapat meninjau susunan soal yang terhubung ke materi ini.' : 'Kerjakan semua soal pilihan ganda. Setelah dikirim, skor dan pembahasan jawaban yang salah akan tampil di halaman ini.')
 
 @section('actions')
+    @if ($role === 'siswa')
+        <a class="btn btn-primary" href="{{ route('siswa.ai.index', array_filter(['subject' => $subject->id, 'material' => $material->id, 'quiz' => $quiz->id, 'attempt' => $latestAttempt?->id])) }}">Tanya AI</a>
+    @endif
     @if ($role === 'guru')
         <a class="btn btn-soft" href="{{ route('guru.materials.quizzes.create', [$subject, $material]) }}">Buat Kuis Baru</a>
     @endif
@@ -102,6 +105,9 @@
                 <div class="subsection-actions">
                     <a class="btn btn-soft" href="{{ route('quizzes.attempts.print', [$subject, $material, $quiz, $latestAttempt]) }}" target="_blank" rel="noopener">
                         Print PDF
+                    </a>
+                    <a class="btn btn-soft" href="{{ route('siswa.ai.index', array_filter(['subject' => $subject->id, 'material' => $material->id, 'quiz' => $quiz->id, 'attempt' => $latestAttempt->id])) }}">
+                        Bahas dengan AI
                     </a>
                 </div>
             @endif

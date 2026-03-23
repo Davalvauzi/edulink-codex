@@ -65,7 +65,7 @@
         </section>
     @endif
 
-    <section class="meta">
+    {{-- <section class="meta">
         <div class="section-title">
             <div>
                 <strong>Fokus Dashboard</strong>
@@ -81,10 +81,10 @@
                 </article>
             @endforeach
         </div>
-    </section>
+    </section> --}}
 
     @if ($role === 'siswa' && isset($user))
-        <section class="meta">
+        {{-- <section class="meta">
             <div class="section-title">
                 <div>
                     <strong>Mata Pelajaran Berdasarkan Kelas</strong>
@@ -112,18 +112,20 @@
                         <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
                             <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
                             <h3>{{ $subject->name }}</h3>
-                            <p>{{ $subject->materials_count }} materi tersedia. Buka mapel ini dari halaman Materi atau langsung dari sini.</p>
+                            <p>{{ $subject->materials_count }} materi tersedia. Buka mapel ini dari halaman Materi atau
+                                langsung dari sini.</p>
                         </a>
                     @endforeach
                 </div>
             @endif
-        </section>
+        </section> --}}
     @elseif ($role === 'guru')
-        <section class="meta">
+        {{-- <section class="meta">
             <div class="section-title">
                 <div>
                     <strong>Mapel Terbaru</strong>
-                    <p>Dashboard guru menampilkan progres konten, sementara detail lengkap bisa dibuka dari menu Materi dan Kuis.</p>
+                    <p>Dashboard guru menampilkan progres konten, sementara detail lengkap bisa dibuka dari menu Materi dan
+                        Kuis.</p>
                 </div>
             </div>
 
@@ -135,14 +137,15 @@
                         <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
                             <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
                             <h3>{{ $subject->name }}</h3>
-                            <p>{{ $subject->materials_count }} materi dan {{ $subject->material_subsections_count }} sub bab sudah tersedia.</p>
+                            <p>{{ $subject->materials_count }} materi dan {{ $subject->material_subsections_count }} sub
+                                bab sudah tersedia.</p>
                         </a>
                     @endforeach
                 </div>
             @endif
-        </section>
+        </section> --}}
 
-        <section class="meta">
+        {{-- <section class="meta">
             <div class="section-title">
                 <div>
                     <strong>Kuis Terbaru</strong>
@@ -155,7 +158,8 @@
             @else
                 <div class="quiz-grid">
                     @foreach ($recentQuizzes as $quiz)
-                        <a class="subject-item" href="{{ route('quizzes.show', [$quiz->material->subject, $quiz->material, $quiz]) }}">
+                        <a class="subject-item"
+                            href="{{ route('quizzes.show', [$quiz->material->subject, $quiz->material, $quiz]) }}">
                             <span class="subject-badge">{{ $quiz->material->subject->name }}</span>
                             <h3>{{ $quiz->title }}</h3>
                             <p>{{ $quiz->questions_count }} soal dan {{ $quiz->attempts_count }} attempt siswa.</p>
@@ -163,6 +167,6 @@
                     @endforeach
                 </div>
             @endif
-        </section>
+        </section> --}}
     @endif
 @endsection

@@ -169,7 +169,6 @@ class MaterialController extends Controller
 
         return $this->storeUploadedFile($request);
     }
-
     private function ensureMaterialBelongsToSubject(Subject $subject, Material $material): void
     {
         abort_if($material->subject_id !== $subject->id, 404);

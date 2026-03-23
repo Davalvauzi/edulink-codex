@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MaterialSubsectionController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\StudentAiController;
 use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -186,4 +187,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/siswa/profile', [DashboardController::class, 'updateSiswaProfile'])
         ->middleware('role:siswa')
         ->name('siswa.profile.update');
+
+    Route::get('/siswa/ai', [StudentAiController::class, 'index'])
+        ->middleware('role:siswa')
+        ->name('siswa.ai.index');
+
+    Route::post('/siswa/ai', [StudentAiController::class, 'store'])
+        ->middleware('role:siswa')
+        ->name('siswa.ai.store');
 });

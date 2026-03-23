@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +21,9 @@
             --warn-text: #9a3412;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -590,6 +593,44 @@
             padding: 16px;
         }
 
+        .chat-thread {
+            display: grid;
+            gap: 14px;
+        }
+
+        .chat-message {
+            max-width: 820px;
+            padding: 18px;
+            border-radius: 22px;
+            border: 1px solid var(--line);
+            background: #fff;
+        }
+
+        .chat-message.user {
+            margin-left: auto;
+            background: #fff7ed;
+            border-color: #fed7aa;
+        }
+
+        .chat-message.assistant {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .chat-role {
+            display: inline-block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .chat-copy {
+            line-height: 1.7;
+        }
+
         .question-card-header {
             display: flex;
             justify-content: space-between;
@@ -807,6 +848,7 @@
         }
 
         @media (max-width: 720px) {
+
             .main,
             .sidebar {
                 padding: 20px;
@@ -840,30 +882,41 @@
         }
     </style>
 </head>
+
 <body>
     <div class="layout">
         <aside class="sidebar">
             <div class="brand">
                 <h2>EduLink</h2>
-                <p>Portal sekolah dengan akses berbasis peran untuk admin, guru, dan siswa.</p>
+                <p>Portal edukasi untuk siswa bangsa.</p>
             </div>
 
             <div class="nav">
                 @if (in_array($role, ['admin', 'guru', 'siswa'], true))
                     <div class="nav-group">
                         <span class="nav-label">Navigasi</span>
-                        <a class="{{ request()->routeIs($role.'.dashboard') ? 'active' : '' }}" href="{{ route($role.'.dashboard') }}">
+                        <a class="{{ request()->routeIs($role . '.dashboard') ? 'active' : '' }}"
+                            href="{{ route($role . '.dashboard') }}">
                             Dashboard
                             <span>Ringkasan dan progress pembelajaran</span>
                         </a>
-                        <a class="{{ request()->routeIs($role.'.materials') || request()->routeIs('subjects.show') || request()->routeIs('materials.*') || request()->routeIs('guru.subjects.materials.*') || request()->routeIs('guru.materials.subsections.*') ? 'active' : '' }}" href="{{ route($role.'.materials') }}">
+                        <a class="{{ request()->routeIs($role . '.materials') || request()->routeIs('subjects.show') || request()->routeIs('materials.*') || request()->routeIs('guru.subjects.materials.*') || request()->routeIs('guru.materials.subsections.*') ? 'active' : '' }}"
+                            href="{{ route($role . '.materials') }}">
                             Materi
                             <span>Buka mapel, bab, dan sub bab</span>
                         </a>
-                        <a class="{{ request()->routeIs($role.'.quizzes') || request()->routeIs('quizzes.*') || request()->routeIs('guru.materials.quizzes.*') ? 'active' : '' }}" href="{{ route($role.'.quizzes') }}">
+                        <a class="{{ request()->routeIs($role . '.quizzes') || request()->routeIs('quizzes.*') || request()->routeIs('guru.materials.quizzes.*') ? 'active' : '' }}"
+                            href="{{ route($role . '.quizzes') }}">
                             Kuis
                             <span>Lihat latihan soal dan hasilnya</span>
                         </a>
+                        @if ($role === 'siswa')
+                            <a class="{{ request()->routeIs('siswa.ai.*') ? 'active' : '' }}"
+                                href="{{ route('siswa.ai.index') }}">
+                                Tanya AI
+                                <span>Konsultasi materi dan bahas jawaban kuis</span>
+                            </a>
+                        @endif
                     </div>
                 @endif
 
@@ -904,7 +957,7 @@
 
                 <div class="actions">
                     @if (in_array($role, ['admin', 'guru', 'siswa'], true))
-                        <a class="btn btn-soft" href="{{ route($role.'.dashboard') }}">Home</a>
+                        <a class="btn btn-soft" href="{{ route($role . '.dashboard') }}">Home</a>
                     @endif
 
                     @yield('actions')
@@ -922,4 +975,5 @@
 
     @stack('scripts')
 </body>
+
 </html>
