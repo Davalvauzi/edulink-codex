@@ -14,6 +14,12 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public const GENERAL_KELAS = 'umum';
+
+    public const KELAS_OPTIONS = [
+        self::GENERAL_KELAS => 'Kelas Umum',
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -83,5 +89,20 @@ class User extends Authenticatable
     public function aiConversations(): HasMany
     {
         return $this->hasMany(AiConversation::class);
+    }
+
+    public static function kelasOptions(): array
+    {
+        return self::KELAS_OPTIONS;
+    }
+
+    public static function isValidKelas(?string $kelas): bool
+    {
+        return array_key_exists($kelas, self::KELAS_OPTIONS);
+    }
+
+    public static function kelasLabel(?string $kelas): string
+    {
+        return self::KELAS_OPTIONS[$kelas] ?? (string) $kelas;
     }
 }

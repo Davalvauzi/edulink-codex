@@ -29,4 +29,9 @@ class Subject extends Model
     {
         return $this->hasManyThrough(MaterialSubsection::class, Material::class);
     }
+
+    public function kelasLabel(): string
+    {
+        return User::kelasLabel($this->kelas);
+    }
 }

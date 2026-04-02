@@ -138,7 +138,7 @@ class StudentAiTutor
             '',
             'Profil siswa:',
             '- Nama: '.$user->name,
-            '- Kelas: '.($user->kelas ?: '-'),
+            '- Kelas: '.($user->kelas ? User::kelasLabel($user->kelas) : '-'),
         ];
 
         if ($conversation->subject) {

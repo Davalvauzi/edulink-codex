@@ -41,23 +41,21 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Siswa EduLink',
                 'role' => 'siswa',
-                'kelas' => '10',
+                'kelas' => User::GENERAL_KELAS,
                 'password' => 'password',
             ]
         );
 
-        foreach (['10', '11', '12'] as $kelas) {
-            foreach (['Matematika', 'Bahasa Indonesia', 'Bahasa Inggris'] as $subjectName) {
-                Subject::query()->updateOrCreate(
-                    [
-                        'name' => $subjectName,
-                        'kelas' => $kelas,
-                    ],
-                    [
-                        'created_by' => $guru->id ?? $admin->id ?? null,
-                    ]
-                );
-            }
+        foreach (['Matematika', 'Bahasa Indonesia', 'Bahasa Inggris'] as $subjectName) {
+            Subject::query()->updateOrCreate(
+                [
+                    'name' => $subjectName,
+                    'kelas' => User::GENERAL_KELAS,
+                ],
+                [
+                    'created_by' => $guru->id ?? $admin->id ?? null,
+                ]
+            );
         }
     }
 }

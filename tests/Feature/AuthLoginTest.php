@@ -57,7 +57,7 @@ class AuthLoginTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Siswa Baru',
             'email' => 'siswa-baru@example.com',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
@@ -66,7 +66,7 @@ class AuthLoginTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'siswa-baru@example.com',
             'role' => 'siswa',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
         ]);
     }
 
@@ -74,14 +74,14 @@ class AuthLoginTest extends TestCase
     {
         $user = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
             'email' => 'siswa-lama@example.com',
         ]);
 
         $response = $this->actingAs($user)->put('/siswa/profile', [
             'name' => 'Siswa Update',
             'email' => 'siswa-update@example.com',
-            'kelas' => '12',
+            'kelas' => User::GENERAL_KELAS,
             'password' => 'password999',
             'password_confirmation' => 'password999',
         ]);
@@ -92,44 +92,40 @@ class AuthLoginTest extends TestCase
             'id' => $user->id,
             'name' => 'Siswa Update',
             'email' => 'siswa-update@example.com',
-            'kelas' => '12',
+            'kelas' => User::GENERAL_KELAS,
         ]);
     }
 
-    public function test_siswa_dashboard_defaults_to_user_kelas_subjects(): void
+    public function test_siswa_dashboard_defaults_to_general_subjects(): void
     {
         $user = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
-        Subject::query()->create(['name' => 'Fisika Lanjut', 'kelas' => '11']);
-        Subject::query()->create(['name' => 'Ekonomi Dasar', 'kelas' => '10']);
+        Subject::query()->create(['name' => 'Fisika Lanjut', 'kelas' => User::GENERAL_KELAS]);
 
         $response = $this->actingAs($user)->get('/siswa/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Fisika Lanjut');
-        $response->assertDontSee('Ekonomi Dasar');
-        $response->assertSee('Menampilkan kelas 11');
+        $response->assertSee('Mapel Kelas Umum');
+        $response->assertSee('Menampilkan Kelas Umum');
     }
 
-    public function test_siswa_can_filter_subjects_to_other_kelas(): void
+    public function test_siswa_dashboard_ignores_invalid_kelas_filter(): void
     {
         $user = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
-        Subject::query()->create(['name' => 'Sosiologi Global', 'kelas' => '12']);
-        Subject::query()->create(['name' => 'Sejarah Nusantara', 'kelas' => '11']);
+        Subject::query()->create(['name' => 'Sosiologi Global', 'kelas' => User::GENERAL_KELAS]);
 
         $response = $this->actingAs($user)->get('/siswa/dashboard?kelas=12');
 
         $response->assertOk();
-        $response->assertSee('Sosiologi Global');
-        $response->assertDontSee('Sejarah Nusantara');
-        $response->assertSee('Menampilkan kelas 12');
+        $response->assertSee('Mapel Kelas Umum');
+        $response->assertSee('Menampilkan Kelas Umum');
     }
 
     public function test_guru_can_add_subject_for_specific_kelas(): void
@@ -141,7 +137,7 @@ class AuthLoginTest extends TestCase
 
         $response = $this->actingAs($guru)->post(route('guru.subjects.store'), [
             'name' => 'Kimia',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
         $subject = Subject::query()->where('name', 'Kimia')->firstOrFail();
@@ -150,7 +146,7 @@ class AuthLoginTest extends TestCase
         $response->assertSessionHas('success');
         $this->assertDatabaseHas('subjects', [
             'name' => 'Kimia',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
     }
@@ -166,7 +162,7 @@ class AuthLoginTest extends TestCase
 
         $subject = Subject::query()->create([
             'name' => 'Matematika',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -192,7 +188,7 @@ class AuthLoginTest extends TestCase
     {
         $user = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
         $response = $this->actingAs($user)->get(route('siswa.profile'));
@@ -224,7 +220,7 @@ class AuthLoginTest extends TestCase
 
         $subject = Subject::query()->create([
             'name' => 'Biologi',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -253,12 +249,12 @@ class AuthLoginTest extends TestCase
     {
         $siswa = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
         $subject = Subject::query()->create([
             'name' => 'Sejarah',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
         $material = Material::query()->create([
@@ -285,7 +281,7 @@ class AuthLoginTest extends TestCase
 
         $subject = Subject::query()->create([
             'name' => 'Bahasa Indonesia',
-            'kelas' => '12',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -318,7 +314,7 @@ class AuthLoginTest extends TestCase
 
         $subject = Subject::query()->create([
             'name' => 'Geografi',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -347,7 +343,7 @@ class AuthLoginTest extends TestCase
 
         $subject = Subject::query()->create([
             'name' => 'Matematika',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -385,12 +381,12 @@ class AuthLoginTest extends TestCase
 
         $siswa = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
         $subject = Subject::query()->create([
             'name' => 'Matematika',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -444,12 +440,12 @@ class AuthLoginTest extends TestCase
 
         $siswa = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
         $subject = Subject::query()->create([
             'name' => 'IPA',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -494,7 +490,7 @@ class AuthLoginTest extends TestCase
 
         $subject = Subject::query()->create([
             'name' => 'Biologi',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -546,12 +542,12 @@ class AuthLoginTest extends TestCase
 
         $siswa = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
         $subject = Subject::query()->create([
             'name' => 'Matematika',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 
@@ -632,14 +628,14 @@ class AuthLoginTest extends TestCase
 
         $siswa = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
             'name' => 'Siswa Cetak',
             'email' => 'cetak@example.com',
         ]);
 
         $subject = Subject::query()->create([
             'name' => 'Bahasa Inggris',
-            'kelas' => '10',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 

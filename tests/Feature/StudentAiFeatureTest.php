@@ -87,12 +87,12 @@ class StudentAiFeatureTest extends TestCase
 
         $siswa = User::factory()->create([
             'role' => 'siswa',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
         ]);
 
         $subject = Subject::query()->create([
             'name' => 'Fisika',
-            'kelas' => '11',
+            'kelas' => User::GENERAL_KELAS,
             'created_by' => $guru->id,
         ]);
 

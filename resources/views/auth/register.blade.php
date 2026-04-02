@@ -99,9 +99,9 @@
             <label for="kelas">Kelas</label>
             <select id="kelas" name="kelas" required>
                 <option value="">Pilih kelas</option>
-                <option value="10" @selected(old('kelas') === '10')>10</option>
-                <option value="11" @selected(old('kelas') === '11')>11</option>
-                <option value="12" @selected(old('kelas') === '12')>12</option>
+                @foreach (\App\Models\User::kelasOptions() as $kelasValue => $kelasLabel)
+                    <option value="{{ $kelasValue }}" @selected(old('kelas') === $kelasValue)>{{ $kelasLabel }}</option>
+                @endforeach
             </select>
 
             <label for="password">Password</label>

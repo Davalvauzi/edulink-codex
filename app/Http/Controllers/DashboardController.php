@@ -8,6 +8,7 @@ use App\Models\MaterialSubsectionProgress;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -107,13 +108,13 @@ class DashboardController extends Controller
             'subjects' => $subjects,
             'selectedKelas' => $selectedKelas,
             'dashboardStats' => [
-                ['label' => 'Mapel Aktif', 'value' => $subjects->count(), 'detail' => 'Mapel kelas '.$selectedKelas],
+                ['label' => 'Mapel Aktif', 'value' => $subjects->count(), 'detail' => 'Mapel '.User::kelasLabel($selectedKelas)],
                 ['label' => 'Sub Bab Selesai', 'value' => $completedSubsections, 'detail' => 'Dari '.$totalSubsections.' sub bab'],
                 ['label' => 'Kuis Tersedia', 'value' => $availableQuizzes, 'detail' => 'Bisa dibuka dari menu Kuis'],
                 ['label' => 'Kuis Selesai', 'value' => $completedQuizzes, 'detail' => 'Attempt yang sudah dikirim'],
             ],
             'progressHighlights' => [
-                ['title' => 'Progress Belajar', 'description' => 'Progress sub bab saat ini '.$progressPercentage.'% untuk kelas '.$selectedKelas.'.'],
+                ['title' => 'Progress Belajar', 'description' => 'Progress sub bab saat ini '.$progressPercentage.'% untuk '.strtolower(User::kelasLabel($selectedKelas)).'.'],
                 ['title' => 'Latihan Soal', 'description' => 'Kuis yang tersedia bisa dibuka dari menu sidebar tanpa harus kembali ke materi.'],
             ],
             'progressPercentage' => $progressPercentage,
@@ -235,7 +236,7 @@ class DashboardController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'kelas' => ['required', 'in:10,11,12'],
+            'kelas' => ['required', 'in:'.implode(',', array_keys(User::kelasOptions()))],
             'password' => ['nullable', 'confirmed', 'min:8'],
         ]);
 
@@ -258,7 +259,7 @@ class DashboardController extends Controller
     {
         $selectedKelas = $request->query('kelas', $defaultKelas);
 
-        return in_array($selectedKelas, ['10', '11', '12'], true) ? $selectedKelas : $defaultKelas;
+        return User::isValidKelas($selectedKelas) ? $selectedKelas : $defaultKelas;
     }
 
     private function buildStudentSubjectQuery(string $selectedKelas)

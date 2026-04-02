@@ -11,7 +11,7 @@
     </div>
     <div class="static-item">
         Kelas
-        <span>{{ $subject->kelas }}</span>
+        <span>{{ $subject->kelasLabel() }}</span>
     </div>
 @endsection
 
@@ -46,7 +46,7 @@
             <article class="mini-info">
                 <span>Mata Pelajaran</span>
                 <strong>{{ $subject->name }}</strong>
-                <p>Kelas {{ $subject->kelas }}</p>
+                <p>{{ $subject->kelasLabel() }}</p>
             </article>
             <article class="mini-info">
                 <span>Dibuat Oleh</span>

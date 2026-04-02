@@ -42,7 +42,7 @@
         </div>
         <div class="box">
             <strong>Kelas</strong>
-            <p>{{ $attempt->user->kelas ?? '-' }}</p>
+            <p>{{ $attempt->user?->kelas ? \App\Models\User::kelasLabel($attempt->user->kelas) : '-' }}</p>
         </div>
         <div class="box">
             <strong>Skor</strong>

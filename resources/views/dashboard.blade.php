@@ -8,7 +8,7 @@
     @if ($role === 'siswa' && isset($selectedKelas))
         <div class="static-item">
             Filter Kelas
-            <span>Menampilkan kelas {{ $selectedKelas }}</span>
+            <span>Menampilkan {{ \App\Models\User::kelasLabel($selectedKelas) }}</span>
         </div>
     @endif
 @endsection
@@ -55,7 +55,7 @@
             <div class="progress-panel">
                 <div>
                     <strong>{{ $completedSubsections }} dari {{ $totalSubsections }} sub bab selesai</strong>
-                    <p>Progress keseluruhan untuk kelas {{ $selectedKelas }} saat ini {{ $progressPercentage }}%.</p>
+                    <p>Progress keseluruhan untuk {{ strtolower(\App\Models\User::kelasLabel($selectedKelas)) }} saat ini {{ $progressPercentage }}%.</p>
                 </div>
                 <div class="progress-track">
                     <div class="progress-fill" style="width: {{ $progressPercentage }}%;"></div>
@@ -96,21 +96,21 @@
                 <div class="field">
                     <label for="kelas-filter">Filter Kelas</label>
                     <select id="kelas-filter" name="kelas">
-                        <option value="10" @selected($selectedKelas === '10')>Kelas 10</option>
-                        <option value="11" @selected($selectedKelas === '11')>Kelas 11</option>
-                        <option value="12" @selected($selectedKelas === '12')>Kelas 12</option>
+                        @foreach (\App\Models\User::kelasOptions() as $kelasValue => $kelasLabel)
+                            <option value="{{ $kelasValue }}" @selected($selectedKelas === $kelasValue)>{{ $kelasLabel }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <button class="btn btn-primary" type="submit">Terapkan Filter</button>
             </form>
 
             @if (($subjects ?? collect())->isEmpty())
-                <div class="empty-state">Belum ada mata pelajaran untuk kelas {{ $selectedKelas }}.</div>
+                <div class="empty-state">Belum ada mata pelajaran untuk {{ strtolower(\App\Models\User::kelasLabel($selectedKelas)) }}.</div>
             @else
                 <div class="subjects-grid">
                     @foreach ($subjects as $subject)
                         <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
-                            <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
+                            <span class="subject-badge">{{ $subject->kelasLabel() }}</span>
                             <h3>{{ $subject->name }}</h3>
                             <p>{{ $subject->materials_count }} materi tersedia. Buka mapel ini dari halaman Materi atau
                                 langsung dari sini.</p>
@@ -135,7 +135,7 @@
                 <div class="subjects-grid">
                     @foreach ($subjects as $subject)
                         <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
-                            <span class="subject-badge">Kelas {{ $subject->kelas }}</span>
+                            <span class="subject-badge">{{ $subject->kelasLabel() }}</span>
                             <h3>{{ $subject->name }}</h3>
                             <p>{{ $subject->materials_count }} materi dan {{ $subject->material_subsections_count }} sub
                                 bab sudah tersedia.</p>

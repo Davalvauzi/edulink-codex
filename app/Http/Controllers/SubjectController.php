@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -26,7 +27,7 @@ class SubjectController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'kelas' => ['required', 'in:10,11,12'],
+            'kelas' => ['required', 'in:'.implode(',', array_keys(User::kelasOptions()))],
         ]);
 
         $subject = Subject::query()->create([

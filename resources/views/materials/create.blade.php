@@ -7,7 +7,7 @@
     </a>
     <div class="static-item">
         Tambah Materi
-        <span>Buat bab baru untuk kelas {{ $subject->kelas }}</span>
+        <span>Buat bab baru untuk {{ strtolower($subject->kelasLabel()) }}</span>
     </div>
 @endsection
 

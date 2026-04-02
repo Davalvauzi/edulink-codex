@@ -7,7 +7,7 @@
     </a>
     <div class="static-item">
         Mata Pelajaran
-        <span>{{ $subject->name }} kelas {{ $subject->kelas }}</span>
+        <span>{{ $subject->name }} - {{ $subject->kelasLabel() }}</span>
     </div>
     <div class="static-item">
         Total Materi
@@ -26,7 +26,7 @@
     <section class="cards">
         <article class="card">
             <strong>Kelas</strong>
-            <p>Mata pelajaran ini tersedia untuk kelas {{ $subject->kelas }}.</p>
+            <p>Mata pelajaran ini tersedia untuk {{ strtolower($subject->kelasLabel()) }}.</p>
         </article>
         <article class="card">
             <strong>Pembuat</strong>
