@@ -78,6 +78,124 @@ class StudentAiFeatureTest extends TestCase
         ]);
     }
 
+    public function test_siswa_can_reset_ai_history_for_current_context_only(): void
+    {
+        [$siswa, $subject, $material, $subsection] = $this->buildLearningContext();
+        $otherSiswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => User::GENERAL_KELAS,
+        ]);
+
+        $this->actingAs($siswa)->get(route('siswa.ai.index', [
+            'subject' => $subject->id,
+            'material' => $material->id,
+            'subsection' => $subsection->id,
+        ]));
+
+        $conversation = AiConversation::query()->where('user_id', $siswa->id)->firstOrFail();
+        $conversation->messages()->create([
+            'role' => 'user',
+            'content' => 'Tolong ringkas sub bab ini.',
+        ]);
+
+        $otherConversation = AiConversation::query()->create([
+            'user_id' => $otherSiswa->id,
+            'subject_id' => $subject->id,
+            'material_id' => $material->id,
+            'material_subsection_id' => $subsection->id,
+            'context_hash' => $conversation->context_hash,
+            'title' => 'Diskusi siswa lain',
+        ]);
+
+        $otherConversation->messages()->create([
+            'role' => 'user',
+            'content' => 'Riwayat siswa lain.',
+        ]);
+
+        $response = $this->actingAs($siswa)->delete(route('siswa.ai.destroy'), [
+            'subject' => $subject->id,
+            'material' => $material->id,
+            'subsection' => $subsection->id,
+        ]);
+
+        $response->assertRedirect(route('siswa.ai.index', [
+            'subject' => $subject->id,
+            'material' => $material->id,
+            'subsection' => $subsection->id,
+        ]));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('ai_conversations', ['id' => $conversation->id]);
+        $this->assertDatabaseMissing('ai_messages', ['ai_conversation_id' => $conversation->id]);
+        $this->assertDatabaseHas('ai_conversations', ['id' => $otherConversation->id]);
+        $this->assertDatabaseHas('ai_messages', ['ai_conversation_id' => $otherConversation->id]);
+    }
+
+    public function test_siswa_can_reset_own_quiz_answers_and_related_ai_history(): void
+    {
+        [$siswa, $subject, $material, $subsection, $quiz, $attempt] = $this->buildLearningContext(withAttempt: true);
+        $otherSiswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => User::GENERAL_KELAS,
+        ]);
+        $question = QuizQuestion::query()->where('quiz_id', $quiz->id)->firstOrFail();
+
+        $otherAttempt = QuizAttempt::query()->create([
+            'quiz_id' => $quiz->id,
+            'user_id' => $otherSiswa->id,
+            'score' => 100,
+            'correct_answers' => 1,
+            'total_questions' => 1,
+            'submitted_at' => now(),
+        ]);
+
+        QuizAttemptAnswer::query()->create([
+            'quiz_attempt_id' => $otherAttempt->id,
+            'quiz_question_id' => $question->id,
+            'selected_option' => 'c',
+            'is_correct' => true,
+        ]);
+
+        $conversation = AiConversation::query()->create([
+            'user_id' => $siswa->id,
+            'subject_id' => $subject->id,
+            'material_id' => $material->id,
+            'material_subsection_id' => $subsection->id,
+            'quiz_id' => $quiz->id,
+            'quiz_attempt_id' => $attempt->id,
+            'context_hash' => 'subject='.$subject->id.':material='.$material->id.':subsection='.$subsection->id.':quiz='.$quiz->id.':attempt='.$attempt->id,
+            'title' => 'Bahas hasil kuis',
+        ]);
+
+        $conversation->messages()->create([
+            'role' => 'user',
+            'content' => 'Kenapa jawaban saya salah?',
+        ]);
+
+        $otherConversation = AiConversation::query()->create([
+            'user_id' => $otherSiswa->id,
+            'subject_id' => $subject->id,
+            'material_id' => $material->id,
+            'quiz_id' => $quiz->id,
+            'quiz_attempt_id' => $otherAttempt->id,
+            'context_hash' => 'subject='.$subject->id.':material='.$material->id.':subsection=none:quiz='.$quiz->id.':attempt='.$otherAttempt->id,
+            'title' => 'Bahas hasil kuis siswa lain',
+        ]);
+
+        $response = $this->actingAs($siswa)->delete(route('siswa.quizzes.answers.destroy', [$subject, $material, $quiz]));
+
+        $response->assertRedirect(route('quizzes.show', [$subject, $material, $quiz]));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('quiz_attempts', ['id' => $attempt->id]);
+        $this->assertDatabaseMissing('quiz_attempt_answers', ['quiz_attempt_id' => $attempt->id]);
+        $this->assertDatabaseMissing('ai_conversations', ['id' => $conversation->id]);
+        $this->assertDatabaseMissing('ai_messages', ['ai_conversation_id' => $conversation->id]);
+        $this->assertDatabaseHas('quiz_attempts', ['id' => $otherAttempt->id]);
+        $this->assertDatabaseHas('quiz_attempt_answers', ['quiz_attempt_id' => $otherAttempt->id]);
+        $this->assertDatabaseHas('ai_conversations', ['id' => $otherConversation->id]);
+    }
+
     private function buildLearningContext(bool $withAttempt = false): array
     {
         $guru = User::factory()->create([

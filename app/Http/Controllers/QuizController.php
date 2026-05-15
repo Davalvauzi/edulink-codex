@@ -85,6 +85,7 @@ class QuizController extends Controller
         $quiz->load(['creator', 'questions', 'material.subject']);
 
         $latestAttempt = null;
+        $quizAttempts = collect();
 
         if ($user->role === 'siswa') {
             $latestAttempt = QuizAttempt::query()
@@ -94,6 +95,13 @@ class QuizController extends Controller
                 ->latest('submitted_at')
                 ->latest('id')
                 ->first();
+        } elseif ($user->role === 'guru') {
+            $quizAttempts = QuizAttempt::query()
+                ->with(['user', 'answers.question'])
+                ->where('quiz_id', $quiz->id)
+                ->latest('submitted_at')
+                ->latest('id')
+                ->get();
         }
 
         return view('quizzes.show', [
@@ -104,6 +112,7 @@ class QuizController extends Controller
             'material' => $material,
             'quiz' => $quiz,
             'latestAttempt' => $latestAttempt,
+            'quizAttempts' => $quizAttempts,
         ]);
     }
 
@@ -199,6 +208,42 @@ class QuizController extends Controller
         return redirect()
             ->route('quizzes.show', [$subject, $material, $quiz])
             ->with('success', 'Kuis selesai dikerjakan. Skor Anda: '.$attempt->score.'.');
+    }
+
+    public function destroyStudentAnswers(Request $request, Subject $subject, Material $material, Quiz $quiz): RedirectResponse
+    {
+        $user = $request->user();
+        abort_if($user->role !== 'siswa', 403);
+        $this->ensureMaterialBelongsToSubject($subject, $material);
+        $this->ensureQuizBelongsToMaterial($material, $quiz);
+
+        $attemptIds = QuizAttempt::query()
+            ->where('quiz_id', $quiz->id)
+            ->where('user_id', $user->id)
+            ->pluck('id');
+
+        $deletedCount = 0;
+
+        if ($attemptIds->isNotEmpty()) {
+            DB::transaction(function () use ($attemptIds, $quiz, $user, &$deletedCount) {
+                AiConversation::query()
+                    ->where('user_id', $user->id)
+                    ->where(function ($query) use ($attemptIds, $quiz) {
+                        $query->whereIn('quiz_attempt_id', $attemptIds)
+                            ->orWhere('quiz_id', $quiz->id);
+                    })
+                    ->delete();
+
+                $deletedCount = QuizAttempt::query()
+                    ->whereIn('id', $attemptIds)
+                    ->where('user_id', $user->id)
+                    ->delete();
+            });
+        }
+
+        return redirect()
+            ->route('quizzes.show', [$subject, $material, $quiz])
+            ->with('success', $deletedCount.' jawaban kuis berhasil direset.');
     }
 
     public function printAttempt(Request $request, Subject $subject, Material $material, Quiz $quiz, QuizAttempt $attempt): View

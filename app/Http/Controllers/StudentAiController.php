@@ -159,6 +159,23 @@ class StudentAiController extends Controller
             ->with('success', $deletedCount.' riwayat chat AI pada kuis ini berhasil dihapus.');
     }
 
+    public function destroyStudentHistory(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_if($user->role !== 'siswa', 403);
+
+        [$subject, $material, $subsection, $quiz, $quizAttempt] = $this->resolveContext($request);
+
+        $deletedCount = AiConversation::query()
+            ->where('user_id', $user->id)
+            ->where('context_hash', $this->buildContextHash($subject, $material, $subsection, $quiz, $quizAttempt))
+            ->delete();
+
+        return redirect()
+            ->route('siswa.ai.index', $this->buildRouteParameters($subject, $material, $subsection, $quiz, $quizAttempt))
+            ->with('success', $deletedCount.' riwayat chat AI berhasil direset.');
+    }
+
     private function resolveContext(Request $request): array
     {
         $user = $request->user();

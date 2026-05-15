@@ -35,6 +35,28 @@
 @section('subtitle', $contextDescription)
 
 @section('actions')
+    @if ($conversation->messages->isNotEmpty())
+        <form method="POST" action="{{ route('siswa.ai.destroy') }}" onsubmit="return confirm('Reset riwayat chat AI pada konteks ini?');">
+            @csrf
+            @method('DELETE')
+            @if ($subject)
+                <input type="hidden" name="subject" value="{{ $subject->id }}">
+            @endif
+            @if ($material)
+                <input type="hidden" name="material" value="{{ $material->id }}">
+            @endif
+            @if ($subsection)
+                <input type="hidden" name="subsection" value="{{ $subsection->id }}">
+            @endif
+            @if ($quiz)
+                <input type="hidden" name="quiz" value="{{ $quiz->id }}">
+            @endif
+            @if ($quizAttempt)
+                <input type="hidden" name="attempt" value="{{ $quizAttempt->id }}">
+            @endif
+            <button class="btn btn-danger" type="submit">Reset History AI</button>
+        </form>
+    @endif
     @if ($quiz)
         <a class="btn btn-soft" href="{{ route('quizzes.show', [$subject, $material, $quiz]) }}">Kembali ke Kuis</a>
     @elseif ($material)

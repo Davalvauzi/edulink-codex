@@ -754,6 +754,99 @@ class AuthLoginTest extends TestCase
         ]);
     }
 
+    public function test_guru_can_view_all_student_quiz_results_on_quiz_page(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $firstSiswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => User::GENERAL_KELAS,
+            'name' => 'Siswa Pertama',
+            'email' => 'pertama@example.com',
+        ]);
+
+        $secondSiswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => User::GENERAL_KELAS,
+            'name' => 'Siswa Kedua',
+            'email' => 'kedua@example.com',
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Matematika',
+            'kelas' => User::GENERAL_KELAS,
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Persamaan',
+            'description' => '<p>Materi persamaan linear</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $quiz = $material->quizzes()->create([
+            'title' => 'Kuis Persamaan',
+            'created_by' => $guru->id,
+        ]);
+
+        $question = $quiz->questions()->create([
+            'question' => 'Nilai x dari x + 2 = 5 adalah?',
+            'option_a' => '2',
+            'option_b' => '3',
+            'option_c' => '5',
+            'option_d' => '7',
+            'correct_option' => 'b',
+            'explanation' => 'Kurangi kedua ruas dengan 2.',
+            'position' => 1,
+        ]);
+
+        $firstAttempt = $quiz->attempts()->create([
+            'user_id' => $firstSiswa->id,
+            'score' => 100,
+            'correct_answers' => 1,
+            'total_questions' => 1,
+            'submitted_at' => now()->subMinute(),
+        ]);
+
+        $firstAttempt->answers()->create([
+            'quiz_question_id' => $question->id,
+            'selected_option' => 'b',
+            'is_correct' => true,
+        ]);
+
+        $secondAttempt = $quiz->attempts()->create([
+            'user_id' => $secondSiswa->id,
+            'score' => 0,
+            'correct_answers' => 0,
+            'total_questions' => 1,
+            'submitted_at' => now(),
+        ]);
+
+        $secondAttempt->answers()->create([
+            'quiz_question_id' => $question->id,
+            'selected_option' => 'a',
+            'is_correct' => false,
+        ]);
+
+        $response = $this->actingAs($guru)->get(route('quizzes.show', [$subject, $material, $quiz]));
+
+        $response->assertOk();
+        $response->assertSee('Result Kuis Siswa');
+        $response->assertSee('Siswa Pertama');
+        $response->assertSee('pertama@example.com');
+        $response->assertSee('Skor 100');
+        $response->assertSee('Siswa Kedua');
+        $response->assertSee('kedua@example.com');
+        $response->assertSee('Skor 0');
+        $response->assertSee('Jawaban siswa: A');
+        $response->assertSee('Kunci: B');
+        $response->assertSee('Print PDF');
+    }
+
     public function test_siswa_can_open_printable_quiz_result_page(): void
     {
         $guru = User::factory()->create([

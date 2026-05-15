@@ -131,6 +131,13 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('quiz')
         ->name('quizzes.submit');
 
+    Route::delete('/subjects/{subject}/materials/{material}/quizzes/{quiz}/answers', [QuizController::class, 'destroyStudentAnswers'])
+        ->middleware('role:siswa')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('quiz')
+        ->name('siswa.quizzes.answers.destroy');
+
     Route::get('/subjects/{subject}/materials/{material}/subsections/create', [MaterialSubsectionController::class, 'create'])
         ->middleware('role:guru')
         ->whereNumber('subject')
@@ -215,4 +222,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/siswa/ai', [StudentAiController::class, 'store'])
         ->middleware('role:siswa')
         ->name('siswa.ai.store');
+
+    Route::delete('/siswa/ai', [StudentAiController::class, 'destroyStudentHistory'])
+        ->middleware('role:siswa')
+        ->name('siswa.ai.destroy');
 });

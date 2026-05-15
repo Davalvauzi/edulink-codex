@@ -102,6 +102,65 @@
                     </article>
                 @endforeach
             </div>
+
+            <div class="stack">
+                <div class="section-title">
+                    <div>
+                        <strong>Result Kuis Siswa</strong>
+                        <p>Semua attempt siswa pada kuis ini ditampilkan dari yang terbaru.</p>
+                    </div>
+                </div>
+
+                @if ($quizAttempts->isEmpty())
+                    <div class="empty-state">Belum ada siswa yang mengerjakan kuis ini.</div>
+                @else
+                    <div class="question-list">
+                        @foreach ($quizAttempts as $attempt)
+                            @php
+                                $attemptAnswers = $attempt->answers->sortBy(fn ($answer) => $answer->question->position);
+                            @endphp
+
+                            <article class="question-card compact">
+                                <div class="question-card-header">
+                                    <div>
+                                        <strong>{{ $attempt->user?->name ?? 'Siswa tidak diketahui' }}</strong>
+                                        <p>
+                                            {{ $attempt->user?->email ?? '-' }}
+                                            @if ($attempt->submitted_at)
+                                                · Dikirim {{ $attempt->submitted_at->format('d M Y H:i') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <span class="answer-pill">Skor {{ $attempt->score }}</span>
+                                </div>
+
+                                <div class="result-panel">
+                                    <div>
+                                        <strong>{{ $attempt->correct_answers }} dari {{ $attempt->total_questions }} soal benar</strong>
+                                        <p>Attempt ini menyimpan jawaban siswa, status benar/salah, dan pembahasan dari guru.</p>
+                                    </div>
+                                    <a class="btn btn-soft" href="{{ route('quizzes.attempts.print', [$subject, $material, $quiz, $attempt]) }}" target="_blank" rel="noopener">
+                                        Print PDF
+                                    </a>
+                                </div>
+
+                                <div class="question-list">
+                                    @foreach ($attemptAnswers as $answer)
+                                        <div class="explanation-card">
+                                            <strong>
+                                                Soal {{ $answer->question->position }} ·
+                                                {{ $answer->is_correct ? 'Benar' : 'Salah' }}
+                                            </strong>
+                                            <p>{{ $answer->question->question }}</p>
+                                            <p>Jawaban siswa: {{ strtoupper($answer->selected_option) }} · Kunci: {{ strtoupper($answer->question->correct_option) }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
         @else
             @if ($latestAttempt)
                 <div class="result-panel">
@@ -119,6 +178,11 @@
                     <a class="btn btn-soft" href="{{ route('siswa.ai.index', array_filter(['subject' => $subject->id, 'material' => $material->id, 'quiz' => $quiz->id, 'attempt' => $latestAttempt->id])) }}">
                         Bahas dengan AI
                     </a>
+                    <form method="POST" action="{{ route('siswa.quizzes.answers.destroy', [$subject, $material, $quiz]) }}" onsubmit="return confirm('Reset semua jawaban Anda pada kuis ini? Riwayat chat AI yang terkait kuis ini juga akan dihapus.');">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-danger" type="submit">Reset Jawaban</button>
+                    </form>
                 </div>
             @endif
 
