@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $guru = User::query()->updateOrCreate(
-            ['email' => 'guru@edulink.test'],
+            ['email' => 'guru@gmail.com'],
             [
                 'name' => 'Guru EduLink',
                 'role' => 'guru',

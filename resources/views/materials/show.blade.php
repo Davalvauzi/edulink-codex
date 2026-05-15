@@ -24,6 +24,11 @@
     @endif
     @if ($role === 'guru')
         <a class="btn btn-soft" href="{{ route('guru.materials.edit', [$subject, $material]) }}">Edit</a>
+        <form method="POST" action="{{ route('guru.materials.ai-history.destroy', [$subject, $material]) }}" onsubmit="return confirm('Hapus semua history chat AI siswa pada materi ini?');">
+            @csrf
+            @method('DELETE')
+            <button class="btn btn-soft" type="submit">Hapus History AI</button>
+        </form>
         <form method="POST" action="{{ route('guru.materials.destroy', [$subject, $material]) }}" onsubmit="return confirm('Hapus materi ini?');">
             @csrf
             @method('DELETE')
@@ -129,6 +134,18 @@
                             <a class="btn btn-soft" href="{{ route('quizzes.show', [$subject, $material, $quiz]) }}">
                                 {{ $role === 'guru' ? 'Lihat Kuis' : 'Kerjakan Kuis' }}
                             </a>
+                            @if ($role === 'guru')
+                                <form method="POST" action="{{ route('guru.materials.quizzes.ai-history.destroy', [$subject, $material, $quiz]) }}" onsubmit="return confirm('Hapus history chat AI pada kuis ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-soft" type="submit">Hapus History AI</button>
+                                </form>
+                                <form method="POST" action="{{ route('guru.materials.quizzes.destroy', [$subject, $material, $quiz]) }}" onsubmit="return confirm('Hapus kuis ini beserta attempt siswa dan riwayat chat AI terkait?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-danger" type="submit">Hapus</button>
+                                </form>
+                            @endif
                         </div>
                     </article>
                 @endforeach

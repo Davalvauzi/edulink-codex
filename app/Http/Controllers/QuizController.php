@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiConversation;
 use App\Models\Material;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
@@ -104,6 +105,38 @@ class QuizController extends Controller
             'quiz' => $quiz,
             'latestAttempt' => $latestAttempt,
         ]);
+    }
+
+    public function destroy(Request $request, Subject $subject, Material $material, Quiz $quiz): RedirectResponse
+    {
+        abort_if($request->user()->role !== 'guru', 403);
+        $this->ensureMaterialBelongsToSubject($subject, $material);
+        $this->ensureQuizBelongsToMaterial($material, $quiz);
+
+        $quiz->load('questions');
+        $questionImagePaths = $quiz->questions
+            ->pluck('image_path')
+            ->filter()
+            ->values();
+
+        DB::transaction(function () use ($quiz) {
+            $attemptIds = $quiz->attempts()->pluck('id');
+
+            AiConversation::query()
+                ->where('quiz_id', $quiz->id)
+                ->orWhereIn('quiz_attempt_id', $attemptIds)
+                ->delete();
+
+            $quiz->delete();
+        });
+
+        foreach ($questionImagePaths as $imagePath) {
+            Storage::disk('public')->delete($imagePath);
+        }
+
+        return redirect()
+            ->route('materials.show', [$subject, $material])
+            ->with('success', 'Kuis berhasil dihapus beserta attempt dan riwayat chat AI terkait.');
     }
 
     public function submit(Request $request, Subject $subject, Material $material, Quiz $quiz): RedirectResponse

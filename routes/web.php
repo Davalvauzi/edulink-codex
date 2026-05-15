@@ -91,6 +91,26 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('material')
         ->name('guru.materials.quizzes.store');
 
+    Route::delete('/subjects/{subject}/materials/{material}/quizzes/{quiz}', [QuizController::class, 'destroy'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('quiz')
+        ->name('guru.materials.quizzes.destroy');
+
+    Route::delete('/subjects/{subject}/materials/{material}/ai-history', [StudentAiController::class, 'destroyMaterialHistory'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->name('guru.materials.ai-history.destroy');
+
+    Route::delete('/subjects/{subject}/materials/{material}/quizzes/{quiz}/ai-history', [StudentAiController::class, 'destroyQuizHistory'])
+        ->middleware('role:guru')
+        ->whereNumber('subject')
+        ->whereNumber('material')
+        ->whereNumber('quiz')
+        ->name('guru.materials.quizzes.ai-history.destroy');
+
     Route::get('/subjects/{subject}/materials/{material}/quizzes/{quiz}', [QuizController::class, 'show'])
         ->whereNumber('subject')
         ->whereNumber('material')

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\AiConversation;
 use App\Models\Material;
 use App\Models\MaterialSubsection;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -332,6 +334,139 @@ class AuthLoginTest extends TestCase
         $this->assertDatabaseMissing('materials', [
             'id' => $material->id,
         ]);
+    }
+
+    public function test_guru_can_delete_quiz_with_attempts_and_ai_history(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $siswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => User::GENERAL_KELAS,
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Fisika',
+            'kelas' => User::GENERAL_KELAS,
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Energi',
+            'description' => '<p>Materi energi</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $quiz = $material->quizzes()->create([
+            'title' => 'Kuis Energi',
+            'description' => 'Latihan energi.',
+            'created_by' => $guru->id,
+        ]);
+
+        $question = $quiz->questions()->create([
+            'question' => 'Satuan energi adalah?',
+            'option_a' => 'Joule',
+            'option_b' => 'Meter',
+            'option_c' => 'Sekon',
+            'option_d' => 'Newton',
+            'correct_option' => 'a',
+            'position' => 1,
+        ]);
+
+        $attempt = $quiz->attempts()->create([
+            'user_id' => $siswa->id,
+            'score' => 0,
+            'correct_answers' => 0,
+            'total_questions' => 1,
+            'submitted_at' => now(),
+        ]);
+
+        $attempt->answers()->create([
+            'quiz_question_id' => $question->id,
+            'selected_option' => 'b',
+            'is_correct' => false,
+        ]);
+
+        $conversation = AiConversation::query()->create([
+            'user_id' => $siswa->id,
+            'subject_id' => $subject->id,
+            'material_id' => $material->id,
+            'quiz_id' => $quiz->id,
+            'quiz_attempt_id' => $attempt->id,
+            'context_hash' => 'quiz='.$quiz->id,
+            'title' => 'Diskusi kuis',
+        ]);
+
+        $conversation->messages()->create([
+            'role' => 'user',
+            'content' => 'Kenapa salah?',
+        ]);
+
+        $response = $this->actingAs($guru)->delete(route('guru.materials.quizzes.destroy', [$subject, $material, $quiz]));
+
+        $response->assertRedirect(route('materials.show', [$subject, $material]));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseMissing('quizzes', ['id' => $quiz->id]);
+        $this->assertDatabaseMissing('quiz_questions', ['id' => $question->id]);
+        $this->assertDatabaseMissing('quiz_attempts', ['id' => $attempt->id]);
+        $this->assertDatabaseMissing('ai_conversations', ['id' => $conversation->id]);
+        $this->assertDatabaseMissing('ai_messages', ['ai_conversation_id' => $conversation->id]);
+    }
+
+    public function test_guru_can_delete_material_ai_history_without_deleting_quizzes(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $siswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => User::GENERAL_KELAS,
+        ]);
+
+        $subject = Subject::query()->create([
+            'name' => 'Kimia',
+            'kelas' => User::GENERAL_KELAS,
+            'created_by' => $guru->id,
+        ]);
+
+        $material = Material::query()->create([
+            'subject_id' => $subject->id,
+            'title' => 'Bab Atom',
+            'description' => '<p>Materi atom</p>',
+            'created_by' => $guru->id,
+        ]);
+
+        $quiz = $material->quizzes()->create([
+            'title' => 'Kuis Atom',
+            'created_by' => $guru->id,
+        ]);
+
+        $conversation = AiConversation::query()->create([
+            'user_id' => $siswa->id,
+            'subject_id' => $subject->id,
+            'material_id' => $material->id,
+            'context_hash' => 'material='.$material->id,
+            'title' => 'Diskusi materi',
+        ]);
+
+        $conversation->messages()->create([
+            'role' => 'assistant',
+            'content' => 'Mari bahas atom.',
+        ]);
+
+        $response = $this->actingAs($guru)->delete(route('guru.materials.ai-history.destroy', [$subject, $material]));
+
+        $response->assertRedirect(route('materials.show', [$subject, $material]));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('quizzes', ['id' => $quiz->id]);
+        $this->assertDatabaseMissing('ai_conversations', ['id' => $conversation->id]);
+        $this->assertDatabaseMissing('ai_messages', ['ai_conversation_id' => $conversation->id]);
     }
 
     public function test_guru_can_add_subsection_to_existing_material(): void
@@ -669,7 +804,7 @@ class AuthLoginTest extends TestCase
             ],
         ]);
 
-        $attempt = \App\Models\QuizAttempt::query()->where('quiz_id', $quiz->id)->where('user_id', $siswa->id)->firstOrFail();
+        $attempt = QuizAttempt::query()->where('quiz_id', $quiz->id)->where('user_id', $siswa->id)->firstOrFail();
 
         $response = $this->actingAs($siswa)->get(route('quizzes.attempts.print', [$subject, $material, $quiz, $attempt]));
 

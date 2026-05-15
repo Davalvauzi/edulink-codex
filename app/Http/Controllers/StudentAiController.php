@@ -125,6 +125,40 @@ class StudentAiController extends Controller
             ->with('success', 'Jawaban dari AI sudah siap dibaca.');
     }
 
+    public function destroyMaterialHistory(Request $request, Subject $subject, Material $material): RedirectResponse
+    {
+        abort_if($request->user()->role !== 'guru', 403);
+        $this->ensureMaterialBelongsToSubject($subject, $material);
+
+        $deletedCount = AiConversation::query()
+            ->where('material_id', $material->id)
+            ->delete();
+
+        return redirect()
+            ->route('materials.show', [$subject, $material])
+            ->with('success', $deletedCount.' riwayat chat AI pada materi ini berhasil dihapus.');
+    }
+
+    public function destroyQuizHistory(Request $request, Subject $subject, Material $material, Quiz $quiz): RedirectResponse
+    {
+        abort_if($request->user()->role !== 'guru', 403);
+        $this->ensureMaterialBelongsToSubject($subject, $material);
+        $this->ensureQuizBelongsToMaterial($material, $quiz);
+
+        $attemptIds = QuizAttempt::query()
+            ->where('quiz_id', $quiz->id)
+            ->pluck('id');
+
+        $deletedCount = AiConversation::query()
+            ->where('quiz_id', $quiz->id)
+            ->orWhereIn('quiz_attempt_id', $attemptIds)
+            ->delete();
+
+        return redirect()
+            ->route('quizzes.show', [$subject, $material, $quiz])
+            ->with('success', $deletedCount.' riwayat chat AI pada kuis ini berhasil dihapus.');
+    }
+
     private function resolveContext(Request $request): array
     {
         $user = $request->user();
@@ -225,5 +259,15 @@ class StudentAiController extends Controller
             'quiz' => $quiz?->id,
             'attempt' => $quizAttempt?->id,
         ]);
+    }
+
+    private function ensureMaterialBelongsToSubject(Subject $subject, Material $material): void
+    {
+        abort_if($material->subject_id !== $subject->id, 404);
+    }
+
+    private function ensureQuizBelongsToMaterial(Material $material, Quiz $quiz): void
+    {
+        abort_if($quiz->material_id !== $material->id, 404);
     }
 }

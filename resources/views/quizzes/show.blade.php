@@ -29,6 +29,16 @@
     @endif
     @if ($role === 'guru')
         <a class="btn btn-soft" href="{{ route('guru.materials.quizzes.create', [$subject, $material]) }}">Buat Kuis Baru</a>
+        <form method="POST" action="{{ route('guru.materials.quizzes.ai-history.destroy', [$subject, $material, $quiz]) }}" onsubmit="return confirm('Hapus semua history chat AI yang terkait kuis ini?');">
+            @csrf
+            @method('DELETE')
+            <button class="btn btn-soft" type="submit">Hapus History AI</button>
+        </form>
+        <form method="POST" action="{{ route('guru.materials.quizzes.destroy', [$subject, $material, $quiz]) }}" onsubmit="return confirm('Hapus kuis ini beserta attempt siswa dan riwayat chat AI terkait?');">
+            @csrf
+            @method('DELETE')
+            <button class="btn btn-danger" type="submit">Hapus Kuis</button>
+        </form>
     @endif
     <a class="btn btn-soft" href="{{ route('materials.show', [$subject, $material]) }}">Kembali</a>
 @endsection
