@@ -22,7 +22,7 @@ class Subject extends Model
 
     public function materials(): HasMany
     {
-        return $this->hasMany(Material::class)->latest();
+        return $this->hasMany(Material::class)->latest('created_at')->latest('id');
     }
 
     public function materialSubsections(): HasManyThrough

@@ -53,7 +53,6 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'kelas' => ['required', 'in:'.implode(',', array_keys(User::kelasOptions()))],
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
@@ -61,7 +60,7 @@ class AuthController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'role' => 'siswa',
-            'kelas' => $data['kelas'],
+            'kelas' => User::GENERAL_KELAS,
             'password' => $data['password'],
         ]);
 

@@ -47,7 +47,13 @@ class SubjectController extends Controller
 
         abort_if(! in_array($user->role, ['guru', 'siswa'], true), 403);
 
-        $subject->load(['creator', 'materials.creator']);
+        $subject->load([
+            'creator',
+            'materials' => fn ($query) => $query
+                ->with('creator')
+                ->latest('created_at')
+                ->latest('id'),
+        ]);
 
         return view('subjects.show', [
             'title' => 'Materi '.$subject->name,

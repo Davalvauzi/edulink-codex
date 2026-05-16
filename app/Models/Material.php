@@ -12,6 +12,8 @@ class Material extends Model
         'subject_id',
         'title',
         'description',
+        'image_path',
+        'image_name',
         'file_path',
         'file_name',
         'created_by',
@@ -35,5 +37,14 @@ class Material extends Model
     public function quizzes(): HasMany
     {
         return $this->hasMany(Quiz::class)->latest();
+    }
+
+    public function getImageSourceAttribute(): ?string
+    {
+        if ($this->image_path) {
+            return asset('storage/'.$this->image_path);
+        }
+
+        return null;
     }
 }

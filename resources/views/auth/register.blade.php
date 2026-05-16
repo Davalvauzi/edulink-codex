@@ -44,7 +44,7 @@
         h1 { margin: 0 0 8px; font-size: 34px; }
         p { margin: 0 0 24px; color: var(--muted); line-height: 1.6; }
         label { display: block; margin-bottom: 8px; font-weight: 700; }
-        input, select {
+        input {
             width: 100%;
             padding: 14px 16px;
             border-radius: 14px;
@@ -95,14 +95,6 @@
 
             <label for="email">Email</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required>
-
-            <label for="kelas">Kelas</label>
-            <select id="kelas" name="kelas" required>
-                <option value="">Pilih kelas</option>
-                @foreach (\App\Models\User::kelasOptions() as $kelasValue => $kelasLabel)
-                    <option value="{{ $kelasValue }}" @selected(old('kelas') === $kelasValue)>{{ $kelasLabel }}</option>
-                @endforeach
-            </select>
 
             <label for="password">Password</label>
             <input id="password" type="password" name="password" required>

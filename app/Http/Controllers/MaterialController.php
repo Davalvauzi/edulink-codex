@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
-use App\Models\MaterialSubsection;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class MaterialController extends Controller
@@ -30,12 +28,15 @@ class MaterialController extends Controller
         abort_if($request->user()->role !== 'guru', 403);
 
         $data = $this->validateMaterial($request);
+        [$imagePath, $imageName] = $this->storeUploadedImage($request);
         [$filePath, $fileName] = $this->storeUploadedFile($request);
 
         $material = Material::query()->create([
             'subject_id' => $subject->id,
             'title' => $data['title'],
             'description' => $this->sanitizeDescription($data['description']),
+            'image_path' => $imagePath,
+            'image_name' => $imageName,
             'file_path' => $filePath,
             'file_name' => $fileName,
             'created_by' => $request->user()->id,
@@ -57,17 +58,7 @@ class MaterialController extends Controller
             'creator',
             'subject.creator',
             'quizzes' => fn ($query) => $query->withCount('questions')->with('creator'),
-            'subsections' => fn ($query) => $query->with(
-                $user->role === 'siswa'
-                    ? ['creator', 'progressRecords' => fn ($progressQuery) => $progressQuery->where('user_id', $user->id)]
-                    : ['creator', 'progressRecords']
-            ),
         ]);
-
-        [$completedSubsections, $progressPercentage, $subsections] = $this->buildProgressSummary(
-            $material->subsections,
-            $user->role === 'siswa'
-        );
 
         return view('materials.show', [
             'title' => $material->title,
@@ -76,10 +67,6 @@ class MaterialController extends Controller
             'subject' => $subject,
             'material' => $material,
             'quizzes' => $material->quizzes,
-            'subsections' => $subsections,
-            'completedSubsections' => $completedSubsections,
-            'totalSubsections' => $material->subsections->count(),
-            'progressPercentage' => $progressPercentage,
         ]);
     }
 
@@ -104,11 +91,14 @@ class MaterialController extends Controller
 
         $data = $this->validateMaterial($request);
 
+        [$imagePath, $imageName] = $this->replaceUploadedImage($request, $material);
         [$filePath, $fileName] = $this->replaceUploadedFile($request, $material);
 
         $material->update([
             'title' => $data['title'],
             'description' => $this->sanitizeDescription($data['description']),
+            'image_path' => $imagePath,
+            'image_name' => $imageName,
             'file_path' => $filePath,
             'file_name' => $fileName,
         ]);
@@ -127,6 +117,10 @@ class MaterialController extends Controller
             Storage::disk('public')->delete($material->file_path);
         }
 
+        if ($material->image_path) {
+            Storage::disk('public')->delete($material->image_path);
+        }
+
         $material->delete();
 
         return redirect()
@@ -139,8 +133,36 @@ class MaterialController extends Controller
         return $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
+            'image_file' => ['nullable', 'file', 'image', 'max:4096'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ]);
+    }
+
+    private function storeUploadedImage(Request $request): array
+    {
+        if (! $request->hasFile('image_file')) {
+            return [null, null];
+        }
+
+        $uploadedFile = $request->file('image_file');
+
+        return [
+            $uploadedFile->store('material-images', 'public'),
+            $uploadedFile->getClientOriginalName(),
+        ];
+    }
+
+    private function replaceUploadedImage(Request $request, Material $material): array
+    {
+        if (! $request->hasFile('image_file')) {
+            return [$material->image_path, $material->image_name];
+        }
+
+        if ($material->image_path) {
+            Storage::disk('public')->delete($material->image_path);
+        }
+
+        return $this->storeUploadedImage($request);
     }
 
     private function storeUploadedFile(Request $request): array
@@ -172,28 +194,6 @@ class MaterialController extends Controller
     private function ensureMaterialBelongsToSubject(Subject $subject, Material $material): void
     {
         abort_if($material->subject_id !== $subject->id, 404);
-    }
-
-    private function buildProgressSummary(Collection $subsections, bool $forStudent): array
-    {
-        $mappedSubsections = $subsections->map(function (MaterialSubsection $subsection) use ($forStudent) {
-            $subsection->is_completed = $forStudent
-                ? $subsection->progressRecords->isNotEmpty()
-                : false;
-
-            $subsection->completed_students_count = $forStudent
-                ? 0
-                : $subsection->progressRecords->whereNotNull('completed_at')->count();
-
-            return $subsection;
-        });
-
-        $completedSubsections = $mappedSubsections->where('is_completed', true)->count();
-        $progressPercentage = $mappedSubsections->isNotEmpty()
-            ? (int) round(($completedSubsections / $mappedSubsections->count()) * 100)
-            : 0;
-
-        return [$completedSubsections, $progressPercentage, $mappedSubsections];
     }
 
     private function sanitizeDescription(string $html): string

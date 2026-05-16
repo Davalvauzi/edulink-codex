@@ -37,10 +37,18 @@
 </div>
 
 <div class="field">
+    <label for="image_file">Gambar Materi</label>
+    <input id="image_file" type="file" name="image_file" accept="image/*">
+    @if (! empty($material?->image_name))
+        <p class="muted-note">Gambar saat ini: {{ $material->image_name }}</p>
+    @endif
+</div>
+
+<div class="field">
     <label for="file">File PDF</label>
     <input id="file" type="file" name="file" accept="application/pdf">
     @if (! empty($material?->file_name))
-        <p>File saat ini: {{ $material->file_name }}</p>
+        <p class="muted-note">File saat ini: {{ $material->file_name }}</p>
     @endif
 </div>
 

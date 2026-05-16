@@ -24,9 +24,6 @@
 @section('subtitle', $message)
 
 @section('actions')
-    @if ($role === 'guru')
-        <a class="btn btn-primary" href="{{ route('guru.subjects.create') }}">Tambah Mata Pelajaran</a>
-    @endif
     @if ($role === 'siswa' && isset($user))
         <a class="btn btn-soft" href="{{ route('siswa.profile') }}">Profile</a>
     @endif

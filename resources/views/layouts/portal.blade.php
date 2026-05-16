@@ -51,6 +51,9 @@
                 var(--sidebar);
             color: #eefbf6;
             padding: 28px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         .brand {
@@ -126,6 +129,46 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: grid;
             gap: 12px;
+        }
+
+        .sidebar-logout {
+            margin-top: auto;
+            padding-top: 24px;
+        }
+
+        .sidebar-logout button {
+            width: 100%;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(238, 251, 246, 0.94);
+        }
+
+        .sidebar-logout .logout-icon {
+            display: inline-grid;
+            width: 28px;
+            height: 28px;
+            place-items: center;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(238, 251, 246, 0.9);
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .sidebar-logout .logout-copy {
+            display: block;
+            color: rgba(238, 251, 246, 0.94);
+        }
+
+        .sidebar-logout .logout-copy span {
+            display: block;
+            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 12px;
+            font-weight: 400;
         }
 
         .alert {
@@ -723,6 +766,53 @@
             border-top: 1px solid var(--line);
         }
 
+        .material-hero-image {
+            margin: 0;
+            overflow: hidden;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: #f8fbfa;
+        }
+
+        .material-hero-image img {
+            display: block;
+            width: 100%;
+            max-height: 640px;
+            object-fit: contain;
+        }
+
+        .material-hero-image figcaption {
+            padding: 10px 14px;
+            color: var(--muted);
+            font-size: 12px;
+            border-top: 1px solid var(--line);
+        }
+
+        .material-body {
+            gap: 28px;
+        }
+
+        .material-description {
+            display: grid;
+            gap: 16px;
+        }
+
+        .material-description > strong {
+            display: block;
+            font-size: 18px;
+        }
+
+        .material-description .prose {
+            line-height: 2;
+        }
+
+        .material-description .prose p,
+        .material-description .prose ul,
+        .material-description .prose ol,
+        .material-description .prose blockquote {
+            margin-bottom: 22px;
+        }
+
         .answer-pill {
             display: inline-flex;
             align-items: center;
@@ -903,7 +993,7 @@
                         <a class="{{ request()->routeIs($role . '.materials') || request()->routeIs('subjects.show') || request()->routeIs('materials.*') || request()->routeIs('guru.subjects.materials.*') || request()->routeIs('guru.materials.subsections.*') ? 'active' : '' }}"
                             href="{{ route($role . '.materials') }}">
                             Materi
-                            <span>Buka mapel, bab, dan sub bab</span>
+                            <span>Buka Bahasa Inggris dan bab utama</span>
                         </a>
                         <a class="{{ request()->routeIs($role . '.quizzes') || request()->routeIs('quizzes.*') || request()->routeIs('guru.materials.quizzes.*') ? 'active' : '' }}"
                             href="{{ route($role . '.quizzes') }}">
@@ -927,6 +1017,19 @@
                     </div>
                 @endif
             </div>
+
+            @if (in_array($role, ['admin', 'guru', 'siswa'], true))
+                <form class="sidebar-logout" method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit">
+                        <span class="logout-icon" aria-hidden="true">OUT</span>
+                        <span class="logout-copy">
+                            Logout
+                            <span>Keluar dari akun</span>
+                        </span>
+                    </button>
+                </form>
+            @endif
         </aside>
 
         <main class="main">
@@ -961,11 +1064,6 @@
                     @endif
 
                     @yield('actions')
-
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="btn btn-dark" type="submit">Logout</button>
-                    </form>
                 </div>
             </div>
 

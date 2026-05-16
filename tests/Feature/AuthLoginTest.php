@@ -54,12 +54,11 @@ class AuthLoginTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_guest_can_register_as_siswa_with_kelas(): void
+    public function test_guest_can_register_as_siswa_with_default_kelas(): void
     {
         $response = $this->post('/register', [
             'name' => 'Siswa Baru',
             'email' => 'siswa-baru@example.com',
-            'kelas' => User::GENERAL_KELAS,
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
@@ -270,6 +269,39 @@ class AuthLoginTest extends TestCase
         $response->assertOk();
         $response->assertSee('Bab 2');
         $response->assertSee('Isi materi', false);
+    }
+
+    public function test_material_menu_redirects_to_bahasa_inggris_subject(): void
+    {
+        $guru = User::factory()->create([
+            'role' => 'guru',
+            'kelas' => null,
+        ]);
+
+        $siswa = User::factory()->create([
+            'role' => 'siswa',
+            'kelas' => User::GENERAL_KELAS,
+        ]);
+
+        Subject::query()->create([
+            'name' => 'Matematika',
+            'kelas' => User::GENERAL_KELAS,
+            'created_by' => $guru->id,
+        ]);
+
+        $englishSubject = Subject::query()->create([
+            'name' => 'Bahasa Inggris',
+            'kelas' => User::GENERAL_KELAS,
+            'created_by' => $guru->id,
+        ]);
+
+        $this->actingAs($guru)
+            ->get(route('guru.materials'))
+            ->assertRedirect(route('subjects.show', $englishSubject));
+
+        $this->actingAs($siswa)
+            ->get(route('siswa.materials'))
+            ->assertRedirect(route('subjects.show', $englishSubject));
     }
 
     public function test_guru_can_update_material(): void
@@ -561,9 +593,8 @@ class AuthLoginTest extends TestCase
         $materialPageResponse = $this->actingAs($siswa)->get(route('materials.show', [$subject, $material]));
 
         $materialPageResponse->assertOk();
-        $materialPageResponse->assertSee('1 dari 2 sub bab');
-        $materialPageResponse->assertSee('50%');
-        $materialPageResponse->assertSee('Sudah Dibaca');
+        $materialPageResponse->assertDontSee('Daftar Sub Bab');
+        $materialPageResponse->assertDontSee('Sudah Dibaca');
     }
 
     public function test_subsection_detail_shows_next_button_and_supports_image(): void
