@@ -11,6 +11,7 @@ use App\Models\QuizAttempt;
 use App\Models\QuizAttemptAnswer;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -31,7 +32,12 @@ class StudentAiTutor
             'subsection.material.subject',
             'quiz.material.subject',
             'quiz.questions',
+            'quiz.material.subsections',
+            'quiz.material.quizzes.questions',
             'quizAttempt.answers.question',
+            'quizAttempt.quiz.questions',
+            'quizAttempt.quiz.material.subsections',
+            'quizAttempt.quiz.material.quizzes.questions',
             'messages',
         ]);
 
@@ -128,13 +134,15 @@ class StudentAiTutor
 
         $lines = [
             'Anda adalah tutor AI untuk siswa Indonesia di aplikasi EduLink.',
-            'Tujuan Anda membantu siswa memahami materi pelajaran dengan bahasa sederhana, bertahap, dan suportif.',
+            'Tujuan Anda membantu siswa memahami materi, kuis, dan latihan soal dengan bahasa sederhana, bertahap, dan suportif.',
             'Berikan jawaban dalam Bahasa Indonesia.',
             'Fokus pada penjelasan konsep, koreksi miskonsepsi, dan langkah belajar berikutnya.',
-            'Jika pertanyaan siswa terkait jawaban kuis yang salah, jelaskan kenapa salah dan bagaimana menemukan jawaban yang benar tanpa sekadar menyebut kunci.',
+            'Jika konteks percakapan memiliki kuis, perlakukan kuis sebagai sumber utama. Bahas nomor soal, opsi jawaban, pembahasan guru, dan hasil attempt sebelum memperluas ke materi.',
+            'Jika pertanyaan siswa terkait jawaban kuis yang salah, jelaskan kenapa salah dan bagaimana menemukan jawaban yang benar. Jangan hanya menyebut kunci jawaban.',
+            'Gunakan isi file materi, ringkasan materi, sub bab, kuis/latihan soal terkait, dan kemampuan penalaran Anda sebagai sumber pendukung.',
             'Jangan mengaku melihat data yang tidak ada. Jika konteks kurang, katakan dengan jujur lalu tetap bantu berdasarkan informasi yang tersedia.',
             'Jawaban maksimal 220 kata, ringkas, jelas, dan boleh pakai bullet singkat bila membantu.',
-            'Ajak siswa membuka materi atau sub bab terkait jika itu akan membantu.',
+            'Ajak siswa membuka materi, sub bab, atau mencoba soal serupa hanya jika itu membantu menjawab pertanyaan.',
             '',
             'Profil siswa:',
             '- Nama: '.$user->name,
@@ -147,7 +155,7 @@ class StudentAiTutor
 
         if ($material) {
             $lines[] = '';
-            $lines[] = 'Bab yang sedang dipelajari:';
+            $lines[] = $quiz ? 'Materi pendukung untuk kuis:' : 'Bab yang sedang dipelajari:';
             $lines[] = '- Judul: '.$material->title;
             $lines[] = '- Ringkasan: '.$this->cleanText($material->description, 1200);
             $lines[] = '- Daftar sub bab: '.$material->subsections()
@@ -155,6 +163,12 @@ class StudentAiTutor
                 ->get()
                 ->map(fn (MaterialSubsection $item) => $item->position.'. '.$item->title)
                 ->implode('; ');
+
+            $fileContext = $this->buildMaterialFileContext($material);
+
+            if ($fileContext !== '') {
+                $lines[] = '- Isi file materi: '.$fileContext;
+            }
         }
 
         if ($subsection) {
@@ -166,12 +180,18 @@ class StudentAiTutor
 
         if ($quiz) {
             $lines[] = '';
-            $lines[] = 'Kuis terkait:';
+            $lines[] = 'Kuis aktif sebagai sumber utama:';
             $lines[] = '- Judul: '.$quiz->title;
             $lines[] = '- Deskripsi: '.($quiz->description ?: 'Tidak ada deskripsi tambahan.');
-            $lines[] = '- Daftar soal: '.$quiz->questions
-                ->map(fn ($question) => 'Soal '.$question->position.': '.$this->cleanText($question->question, 220))
-                ->implode(' | ');
+            $lines[] = $this->buildQuizQuestionContext($quiz, 12);
+        } elseif ($material) {
+            $relatedQuizContext = $this->buildMaterialQuizContext($material);
+
+            if ($relatedQuizContext !== '') {
+                $lines[] = '';
+                $lines[] = 'Kuis dan latihan soal pada materi ini:';
+                $lines[] = $relatedQuizContext;
+            }
         }
 
         $wrongAnswerSummary = $this->buildWrongAnswerSummary($conversation);
@@ -183,6 +203,94 @@ class StudentAiTutor
         }
 
         return implode("\n", $lines);
+    }
+
+    private function buildQuizQuestionContext(Quiz $quiz, int $limit): string
+    {
+        return $quiz->questions
+            ->take($limit)
+            ->map(function ($question) {
+                $options = collect($question->options)
+                    ->map(fn ($option, $key) => strtoupper($key).'. '.$this->cleanText($option, 180))
+                    ->implode('; ');
+
+                return '- Soal '.$question->position.': '.$this->cleanText($question->question, 260)
+                    .' | Opsi: '.$options
+                    .' | Kunci: '.strtoupper($question->correct_option)
+                    .' | Pembahasan: '.($question->explanation ? $this->cleanText($question->explanation, 260) : 'Belum ada pembahasan guru.');
+            })
+            ->implode("\n");
+    }
+
+    private function buildMaterialQuizContext(Material $material): string
+    {
+        $quizzes = $material->quizzes()
+            ->with('questions')
+            ->latest()
+            ->take(4)
+            ->get();
+
+        return $quizzes
+            ->map(fn (Quiz $quiz) => '- '.$quiz->title.': '.$quiz->questions
+                ->take(4)
+                ->map(fn ($question) => 'Soal '.$question->position.' '.$this->cleanText($question->question, 180))
+                ->implode(' | '))
+            ->implode("\n");
+    }
+
+    private function buildMaterialFileContext(Material $material): string
+    {
+        if (! $material->file_path || ! Storage::disk('public')->exists($material->file_path)) {
+            return '';
+        }
+
+        $extension = Str::lower(pathinfo($material->file_path, PATHINFO_EXTENSION));
+        $rawContent = Storage::disk('public')->get($material->file_path);
+
+        $text = match ($extension) {
+            'txt', 'md', 'html', 'htm' => $rawContent,
+            'pdf' => $this->extractPdfText($rawContent),
+            default => '',
+        };
+
+        if ($text === '') {
+            return 'File '.$material->file_name.' tersedia, tetapi teksnya belum bisa diekstrak otomatis.';
+        }
+
+        return $this->cleanText($text, 2200);
+    }
+
+    private function extractPdfText(string $content): string
+    {
+        $sources = [$content];
+
+        if (preg_match_all('/stream\s*(.*?)\s*endstream/s', $content, $matches)) {
+            foreach ($matches[1] as $stream) {
+                $stream = trim($stream);
+                $decoded = @gzuncompress($stream);
+
+                if ($decoded !== false) {
+                    $sources[] = $decoded;
+                }
+            }
+        }
+
+        $text = collect($sources)
+            ->flatMap(function (string $source) {
+                preg_match_all('/\((?:\\\\.|[^\\\\)]){2,}\)\s*(?:Tj|TJ|\'|")/s', $source, $matches);
+
+                return collect($matches[0] ?? [])
+                    ->map(fn (string $match) => preg_replace('/^\((.*)\)\s*(?:Tj|TJ|\'|")$/s', '$1', $match))
+                    ->map(fn (?string $match) => $match ? stripcslashes($match) : null);
+            })
+            ->filter()
+            ->implode(' ');
+
+        if ($text !== '') {
+            return $text;
+        }
+
+        return preg_replace('/[^\x20-\x7E\r\n\t]+/', ' ', $content) ?? '';
     }
 
     private function buildWrongAnswerSummary(AiConversation $conversation): string

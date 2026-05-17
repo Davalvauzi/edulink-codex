@@ -96,7 +96,6 @@ class DashboardController extends Controller
             'subjects' => $subjects,
             'selectedKelas' => $selectedKelas,
             'dashboardStats' => [
-                ['label' => 'Mapel Aktif', 'value' => $subjects->count(), 'detail' => 'Mapel ' . User::kelasLabel($selectedKelas)],
                 ['label' => 'Materi Aktif', 'value' => $availableMaterials, 'detail' => 'Bab utama tersedia'],
                 ['label' => 'Kuis Tersedia', 'value' => $availableQuizzes, 'detail' => 'Bisa dibuka dari menu Kuis'],
                 ['label' => 'Kuis Selesai', 'value' => $completedQuizzes, 'detail' => 'Attempt yang sudah dikirim'],

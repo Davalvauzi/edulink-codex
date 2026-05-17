@@ -46,6 +46,16 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        User::query()->updateOrCreate(
+            ['email' => 'dafa@gmail.com'],
+            [
+                'name' => 'Dafa',
+                'role' => 'siswa',
+                'kelas' => User::GENERAL_KELAS,
+                'password' => 'password',
+            ]
+        );
+
         foreach (['Matematika', 'Bahasa Indonesia', 'Bahasa Inggris'] as $subjectName) {
             Subject::query()->updateOrCreate(
                 [

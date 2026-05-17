@@ -24,7 +24,7 @@
 @section('subtitle', $role === 'guru' ? 'Guru dapat meninjau susunan soal yang terhubung ke materi ini.' : 'Kerjakan semua soal pilihan ganda. Setelah dikirim, skor dan pembahasan jawaban yang salah akan tampil di halaman ini.')
 
 @section('actions')
-    @if ($role === 'siswa')
+    @if ($role === 'siswa' && $latestAttempt)
         <a class="btn btn-primary" href="{{ route('siswa.ai.index', array_filter(['subject' => $subject->id, 'material' => $material->id, 'quiz' => $quiz->id, 'attempt' => $latestAttempt?->id])) }}">Tanya AI</a>
     @endif
     @if ($role === 'guru')
@@ -39,21 +39,6 @@
 @endsection
 
 @section('content')
-    <section class="cards">
-        <article class="card">
-            <strong>Mata Pelajaran</strong>
-            <p>{{ $subject->name }}</p>
-        </article>
-        <article class="card">
-            <strong>Materi</strong>
-            <p>{{ $material->title }}</p>
-        </article>
-        <article class="card">
-            <strong>Dibuat Oleh</strong>
-            <p>{{ $quiz->creator?->name ?? 'Guru tidak diketahui' }}</p>
-        </article>
-    </section>
-
     <section class="meta stack">
         @if ($quiz->description)
             <div>

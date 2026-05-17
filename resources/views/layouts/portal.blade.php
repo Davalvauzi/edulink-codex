@@ -1000,13 +1000,6 @@
                             Kuis
                             <span>Lihat latihan soal dan hasilnya</span>
                         </a>
-                        @if ($role === 'siswa')
-                            <a class="{{ request()->routeIs('siswa.ai.*') ? 'active' : '' }}"
-                                href="{{ route('siswa.ai.index') }}">
-                                Tanya AI
-                                <span>Konsultasi materi dan bahas jawaban kuis</span>
-                            </a>
-                        @endif
                     </div>
                 @endif
 

@@ -41,6 +41,47 @@ class StudentAiFeatureTest extends TestCase
         ]);
     }
 
+    public function test_tanya_ai_for_quiz_is_hidden_and_blocked_before_student_submits_answers(): void
+    {
+        [$siswa, $subject, $material] = $this->buildLearningContext();
+
+        $quiz = Quiz::query()->create([
+            'material_id' => $material->id,
+            'title' => 'Kuis GLBB',
+            'description' => 'Latihan konsep dasar.',
+        ]);
+
+        QuizQuestion::query()->create([
+            'quiz_id' => $quiz->id,
+            'question' => 'Apa satuan SI untuk percepatan?',
+            'option_a' => 'm',
+            'option_b' => 'm/s',
+            'option_c' => 'm/s2',
+            'option_d' => 'kg',
+            'correct_option' => 'c',
+            'position' => 1,
+        ]);
+
+        $quizPage = $this->actingAs($siswa)->get(route('quizzes.show', [$subject, $material, $quiz]));
+
+        $quizPage->assertOk();
+        $quizPage->assertDontSee('Tanya AI');
+
+        $aiPage = $this->actingAs($siswa)->get(route('siswa.ai.index', [
+            'subject' => $subject->id,
+            'material' => $material->id,
+            'quiz' => $quiz->id,
+        ]));
+
+        $aiPage->assertRedirect(route('quizzes.show', [$subject, $material, $quiz]));
+        $aiPage->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('ai_conversations', [
+            'user_id' => $siswa->id,
+            'quiz_id' => $quiz->id,
+        ]);
+    }
+
     public function test_siswa_gets_clear_error_when_groq_key_is_missing(): void
     {
         config()->set('services.groq.api_key', '');

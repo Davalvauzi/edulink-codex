@@ -20,12 +20,16 @@ class StudentAiController extends Controller
     {
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $user = $request->user();
         abort_if($user->role !== 'siswa', 403);
 
         [$subject, $material, $subsection, $quiz, $quizAttempt] = $this->resolveContext($request);
+
+        if ($redirect = $this->redirectIfQuizAttemptRequired($subject, $material, $quiz, $quizAttempt)) {
+            return $redirect;
+        }
 
         $conversation = AiConversation::query()
             ->with(['messages', 'quizAttempt.quiz', 'quiz'])
@@ -78,6 +82,10 @@ class StudentAiController extends Controller
         ]);
 
         [$subject, $material, $subsection, $quiz, $quizAttempt] = $this->resolveContext($request);
+
+        if ($redirect = $this->redirectIfQuizAttemptRequired($subject, $material, $quiz, $quizAttempt)) {
+            return $redirect;
+        }
 
         $conversation = AiConversation::query()->firstOrCreate(
             [
@@ -253,7 +261,28 @@ class StudentAiController extends Controller
             abort(404);
         }
 
+        if ($quiz && ! $quizAttempt && $user->role === 'siswa') {
+            $quizAttempt = QuizAttempt::query()
+                ->with(['quiz.material.subject', 'answers.question'])
+                ->where('quiz_id', $quiz->id)
+                ->where('user_id', $user->id)
+                ->latest('submitted_at')
+                ->latest('id')
+                ->first();
+        }
+
         return [$subject, $material, $subsection, $quiz, $quizAttempt];
+    }
+
+    private function redirectIfQuizAttemptRequired(?Subject $subject, ?Material $material, ?Quiz $quiz, ?QuizAttempt $quizAttempt): ?RedirectResponse
+    {
+        if (! $quiz || $quizAttempt) {
+            return null;
+        }
+
+        return redirect()
+            ->route('quizzes.show', [$subject, $material, $quiz])
+            ->with('error', 'Tanya AI untuk kuis bisa dipakai setelah Anda mengerjakan dan mengirim jawaban.');
     }
 
     private function buildContextHash(?Subject $subject, ?Material $material, ?MaterialSubsection $subsection, ?Quiz $quiz, ?QuizAttempt $quizAttempt): string

@@ -109,7 +109,8 @@ class AuthLoginTest extends TestCase
         $response = $this->actingAs($user)->get('/siswa/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Mapel Kelas Umum');
+        $response->assertDontSee('Mapel Kelas Umum');
+        $response->assertSee('Materi Aktif');
         $response->assertSee('Menampilkan Kelas Umum');
     }
 
@@ -125,7 +126,8 @@ class AuthLoginTest extends TestCase
         $response = $this->actingAs($user)->get('/siswa/dashboard?kelas=12');
 
         $response->assertOk();
-        $response->assertSee('Mapel Kelas Umum');
+        $response->assertDontSee('Mapel Kelas Umum');
+        $response->assertSee('Materi Aktif');
         $response->assertSee('Menampilkan Kelas Umum');
     }
 

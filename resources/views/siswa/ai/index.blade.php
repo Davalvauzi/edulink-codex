@@ -76,10 +76,6 @@
             <strong>Riwayat Pesan</strong>
             <p>{{ $conversation->messages->count() }} pesan tersimpan pada konteks ini.</p>
         </article>
-        <article class="card">
-            <strong>Jawaban Salah Terdeteksi</strong>
-            <p>{{ $wrongAnswers->count() }} butir terbaru siap dipakai AI untuk membantu Anda.</p>
-        </article>
     </section>
 
     @if ($wrongAnswers->isNotEmpty())
@@ -124,11 +120,7 @@
             </div>
         </div>
 
-        @if ($conversation->messages->isEmpty())
-            <div class="empty-state">
-                Belum ada percakapan. Coba mulai dengan pertanyaan seperti “jelaskan lagi inti materi ini”, “kenapa jawaban saya salah”, atau “beri contoh soal serupa”.
-            </div>
-        @else
+        @if ($conversation->messages->isNotEmpty())
             <div class="chat-thread">
                 @foreach ($conversation->messages as $message)
                     <article class="chat-message {{ $message->role === 'assistant' ? 'assistant' : 'user' }}">
