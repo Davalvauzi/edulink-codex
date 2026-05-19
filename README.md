@@ -91,4 +91,4 @@ Sebelum menjalankan project ini, pastikan sistem kamu sudah terinstal:
 Jika ingin berkontribusi, silakan lakukan *fork* pada repository ini dan buat *pull request* dengan penjelasan mengenai perubahan yang dilakukan.
 
 ---
-Developed by [Dafa Alvauzi](https://github.com/Davalvauzi)
+Developed by [Dafa Alvauzi](https://github.com/Davalvauzi).
