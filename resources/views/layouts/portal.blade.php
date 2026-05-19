@@ -472,6 +472,13 @@
             font-size: 14px;
         }
 
+        .field-error {
+            display: block;
+            margin-top: 8px;
+            color: var(--warn-text);
+            font-size: 13px;
+        }
+
         textarea {
             min-height: 140px;
             resize: vertical;

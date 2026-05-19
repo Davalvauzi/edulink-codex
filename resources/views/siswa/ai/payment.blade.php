@@ -27,6 +27,13 @@
         <form method="POST" action="{{ route('siswa.ai.payment.confirm') }}">
             @csrf
             <div class="field field-full">
+                <label for="payment_sender_name">Nama Pengirim</label>
+                <input id="payment_sender_name" type="text" name="payment_sender_name" value="{{ old('payment_sender_name', $user->name) }}" placeholder="Nama yang melakukan transfer" required maxlength="100" />
+                @error('payment_sender_name')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+            <div class="field field-full">
                 <button class="btn btn-primary" type="submit">Saya Sudah Bayar, Konfirmasi Akses</button>
             </div>
         </form>

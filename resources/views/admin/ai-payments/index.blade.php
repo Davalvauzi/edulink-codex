@@ -28,6 +28,7 @@
                         <tr>
                             <th>Nama</th>
                             <th>Email</th>
+                            <th>Nama Pengirim</th>
                             <th>Waktu Permintaan</th>
                             <th class="text-right">Aksi</th>
                         </tr>
@@ -37,6 +38,7 @@
                             <tr>
                                 <td>{{ $pending->name }}</td>
                                 <td>{{ $pending->email }}</td>
+                                <td>{{ $pending->ai_tutor_payment_sender_name ?? '-' }}</td>
                                 <td>{{ $pending->ai_tutor_payment_requested_at->translatedFormat('d F Y H:i') }}</td>
                                 <td>
                                     <div class="table-actions">

@@ -56,6 +56,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'ai_tutor_paid_at' => 'datetime',
             'ai_tutor_payment_requested_at' => 'datetime',
+            'ai_tutor_payment_sender_name' => 'string',
         ];
     }
 

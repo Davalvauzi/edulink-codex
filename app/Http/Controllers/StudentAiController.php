@@ -220,7 +220,14 @@ class StudentAiController extends Controller
                 ->with('success', 'Permintaan konfirmasi admin sudah terkirim.');
         }
 
-        $user->forceFill(['ai_tutor_payment_requested_at' => now()])->save();
+        $validated = $request->validate([
+            'payment_sender_name' => ['required', 'string', 'max:100'],
+        ]);
+
+        $user->forceFill([
+            'ai_tutor_payment_requested_at' => now(),
+            'ai_tutor_payment_sender_name' => $validated['payment_sender_name'],
+        ])->save();
 
         return redirect()
             ->route('siswa.ai.payment')
