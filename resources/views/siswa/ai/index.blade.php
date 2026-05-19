@@ -42,6 +42,8 @@
     @else
         <a class="btn btn-soft" href="{{ route('siswa.dashboard') }}">Kembali</a>
     @endif
+
+    <a class="btn btn-primary" href="{{ route('siswa.payments.create') }}">Bayar Akses AI</a>
 @endsection
 
 @section('content')

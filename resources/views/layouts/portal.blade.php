@@ -911,6 +911,11 @@
                             <span>Lihat latihan soal dan hasilnya</span>
                         </a>
                         @if ($role === 'siswa')
+                            <a class="{{ request()->routeIs('siswa.payments.*') ? 'active' : '' }}"
+                                href="{{ route('siswa.payments.create') }}">
+                                Pembayaran
+                                <span>Bayar akses AI dan layanan tambahan</span>
+                            </a>
                             <a class="{{ request()->routeIs('siswa.ai.*') ? 'active' : '' }}"
                                 href="{{ route('siswa.ai.index') }}">
                                 Tanya AI

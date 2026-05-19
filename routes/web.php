@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MaterialSubsectionController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\StudentAiController;
 use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Auth;
@@ -188,6 +189,22 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:siswa')
         ->name('siswa.profile.update');
 
+    Route::get('/siswa/pembayaran', [PaymentController::class, 'create'])
+        ->middleware('role:siswa')
+        ->name('siswa.payments.create');
+
+    Route::post('/siswa/pembayaran', [PaymentController::class, 'store'])
+        ->middleware('role:siswa')
+        ->name('siswa.payments.store');
+
+    Route::get('/siswa/pembayaran/{payment}', [PaymentController::class, 'show'])
+        ->middleware('role:siswa')
+        ->name('siswa.payments.show');
+
+    Route::get('/siswa/pembayaran/{payment}/refresh', [PaymentController::class, 'refresh'])
+        ->middleware('role:siswa')
+        ->name('siswa.payments.refresh');
+
     Route::get('/siswa/ai', [StudentAiController::class, 'index'])
         ->middleware('role:siswa')
         ->name('siswa.ai.index');
@@ -196,3 +213,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:siswa')
         ->name('siswa.ai.store');
 });
+
+Route::post('/siswa/pembayaran/notification', [PaymentController::class, 'notify'])
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+    ->name('siswa.payments.notify');
