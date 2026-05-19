@@ -313,6 +313,60 @@
             font-size: 14px;
         }
 
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        .table th,
+        .table td {
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(215, 228, 223, 0.95);
+            vertical-align: middle;
+        }
+
+        .table th {
+            text-align: left;
+            color: var(--text);
+            font-size: 13px;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            font-weight: 700;
+            background: rgba(248, 250, 252, 0.85);
+        }
+
+        .table tbody tr:hover {
+            background: rgba(248, 250, 252, 0.65);
+        }
+
+        .table-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 14px;
+        }
+
+        .inline-form {
+            margin: 0;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .inline-form .btn {
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+
         .meta {
             margin-top: 24px;
             background: rgba(255, 255, 255, 0.8);
@@ -1003,8 +1057,8 @@
                         @if ($role === 'siswa')
                             <a class="{{ request()->routeIs('siswa.ai.index') ? 'active' : '' }}"
                                 href="{{ route('siswa.ai.index') }}">
-                                Tanya AI
-                                <span>Chat dengan AI Tutor untuk materi dan kuis</span>
+                                Tingkatkan AI Kamu
+                                <span>Optimalkan penggunaan AI untuk belajar lebih efektif</span>
                             </a>
                         @endif
                         @if ($role === 'admin')
