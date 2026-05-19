@@ -148,11 +148,11 @@
 /* ─── CARDS ─────────────────────────────────────────── */
 .cm-form-card {
     background: #fff; border: 1px solid var(--cm-bd);
-    border-radius: 20px; padding: 28px; margin-bottom: 18px;
+    border-radius: 14px; padding: 18px; margin-bottom: 14px;
 }
 .cm-form-card-title {
     display: flex; align-items: center; gap: 8px;
-    margin-bottom: 22px; padding-bottom: 14px;
+    margin-bottom: 14px; padding-bottom: 10px;
     border-bottom: 1px solid #ecfdf5;
     font-family: 'Bricolage Grotesque', sans-serif;
     font-size: 1rem; font-weight: 800;
@@ -166,7 +166,7 @@
 /* ─── FORM FIELDS ───────────────────────────────────── */
 .cm-field-row {
     display: grid; grid-template-columns: 1fr 1fr;
-    gap: 16px; margin-bottom: 16px;
+    gap: 12px; margin-bottom: 12px;
 }
 .cm-field-row.cm-full  { grid-template-columns: 1fr; }
 .cm-field-row.cm-three { grid-template-columns: 1fr 1fr 1fr; }
@@ -195,7 +195,7 @@
 .cm-field-input:focus,
 .cm-field-textarea:focus { border-color: var(--cm-g500); }
 
-.cm-field-textarea { min-height: 110px; resize: vertical; }
+.cm-field-textarea { min-height: 92px; resize: vertical; }
 
 .cm-field-hint { font-size: .68rem; color: var(--cm-ink3); }
 
@@ -240,7 +240,7 @@
 /* ─── UPLOAD ZONE ───────────────────────────────────── */
 .cm-upload-zone {
     border: 2px dashed var(--cm-bd);
-    border-radius: 14px; padding: 28px 20px;
+    border-radius: 12px; padding: 18px 16px;
     text-align: center; background: #f8fffe;
     position: relative; cursor: pointer;
     transition: border-color .2s, background .2s;
@@ -264,7 +264,7 @@
     border-radius: 14px; overflow: hidden;
 }
 .cm-thumb-preview img {
-    width: 100%; height: 240px; object-fit: cover; display: block;
+    width: 100%; height: 150px; object-fit: cover; display: block;
 }
 .cm-thumb-remove {
     width: 100%; border: none; padding: 12px;
@@ -285,6 +285,13 @@
 }
 .cm-existing-file-name { font-size: .82rem; font-weight: 700; }
 .cm-existing-file-hint { font-size: .68rem; color: var(--cm-ink3); }
+
+.cm-media-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+}
 
 /* ─── ACTION BAR ────────────────────────────────────── */
 .cm-action-bar {
@@ -324,5 +331,6 @@
     .cm-sidebar { display: none; }
     .cm-main { margin-left: 0; }
     .cm-field-row,
-    .cm-field-row.cm-three { grid-template-columns: 1fr; }
+    .cm-field-row.cm-three,
+    .cm-media-grid { grid-template-columns: 1fr; }
 }

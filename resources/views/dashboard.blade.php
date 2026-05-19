@@ -37,7 +37,7 @@
   </div>
 
   {{-- ── PROGRESS (SISWA ONLY) ───────────────── --}}
-  @if ($role === 'siswa' && isset($totalSubsections))
+  @if ($role === 'siswa' && isset($availableQuizzes))
     <div class="dashboard-progress">
       <div class="dashboard-progress__top">
         <div>
@@ -51,7 +51,7 @@
 
       <div>
         <div class="dashboard-progress__bar-info">
-          <span class="dashboard-progress__bar-label">Total keseluruhan sub bab diselesaikan</span>
+          <span class="dashboard-progress__bar-label">Total kuis diselesaikan</span>
           <span class="dashboard-progress__bar-pct">{{ $progressPercentage }}%</span>
         </div>
         <div class="dashboard-progress__track">
@@ -97,7 +97,7 @@
   @endif
 
   {{-- ── SISWA: MATERI + RIWAYAT KUIS ────────── --}}
-  @if ($role === 'siswa')
+  @if (false && $role === 'siswa')
     <div class="dashboard-two-col">
 
       {{-- Daftar Mapel --}}
@@ -176,75 +176,6 @@
 
   {{-- ── GURU / ADMIN: AKTIVITAS + MAPEL ────── --}}
   @if ($role === 'guru' || $role === 'admin')
-    <div class="dashboard-two-col">
-
-      {{-- Aktivitas Terbaru --}}
-      <div class="dashboard-section-box">
-        <div class="dashboard-section-box__title" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>🕐 Aktivitas Terbaru</span>
-        </div>
-        @php
-          $activities = $recentActivities ?? collect();
-        @endphp
-        @if ($activities->isEmpty())
-          <div class="dashboard-empty">Belum ada aktivitas terbaru.</div>
-        @else
-          <div class="dashboard-recent-list">
-            @foreach ($activities as $activity)
-              <div class="dashboard-recent-item">
-                <span class="dashboard-activity-dot dashboard-activity-dot--{{ $activity['type'] }}"></span>
-                <div style="flex:1;min-width:0;">
-                  <div class="dashboard-recent-item__name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    {{ $activity['label'] }}
-                  </div>
-                  <div class="dashboard-recent-item__meta">{{ $activity['meta'] }}</div>
-                </div>
-                <span class="dashboard-activity-badge dashboard-activity-badge--{{ $activity['type'] }}">{{ $activity['type_label'] }}</span>
-              </div>
-            @endforeach
-          </div>
-        @endif
-      </div>
-
-      {{-- Mata Pelajaran --}}
-      <div class="dashboard-section-box">
-        <div class="dashboard-section-box__title" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>📚 Mata Pelajaran</span>
-          @if ($role === 'guru')
-            <a href="{{ route('guru.subjects.create') }}" class="dashboard-section-box__link">+ Tambah</a>
-          @endif
-        </div>
-        @php
-          $thumbColors = ['green','blue','amber','green','blue'];
-          $thumbIcons  = ['✍️','📖','🖊️','📐','🔬'];
-        @endphp
-        @if (($subjects ?? collect())->isEmpty())
-          <div class="dashboard-empty">
-            Belum ada mata pelajaran.
-            @if ($role === 'guru')
-              <a href="{{ route('guru.subjects.create') }}" style="color:var(--g600);font-weight:700;">Tambah sekarang →</a>
-            @endif
-          </div>
-        @else
-          <div class="dashboard-materi-list">
-            @foreach ($subjects as $idx => $subject)
-              <a href="{{ route('subjects.show', $subject) }}" class="dashboard-materi-item">
-                <div class="dashboard-materi-item__thumb dashboard-materi-item__thumb--{{ $thumbColors[$idx % count($thumbColors)] }}">
-                  {{ $thumbIcons[$idx % count($thumbIcons)] }}
-                </div>
-                <div class="dashboard-materi-item__info">
-                  <div class="dashboard-materi-item__name">{{ $subject->name }}</div>
-                  <div class="dashboard-materi-item__meta">{{ $subject->materials_count }} materi · {{ $subject->material_subsections_count ?? '-' }} sub bab</div>
-                </div>
-                <span class="dashboard-materi-item__arrow">→</span>
-              </a>
-            @endforeach
-          </div>
-        @endif
-      </div>
-
-    </div>
-
     {{-- Kuis Terbaru --}}
     @if (!empty($recentQuizzes) && $recentQuizzes->isNotEmpty())
       <div class="dashboard-section-box">
@@ -273,3 +204,5 @@
 
 </div>
 @endsection
+
+

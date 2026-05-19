@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
-use App\Models\MaterialSubsection;
-use App\Models\MaterialSubsectionProgress;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\Subject;
@@ -23,7 +21,6 @@ class DashboardController extends Controller
             'message' => 'Ringkasan portal ditampilkan di sini agar admin bisa memantau aktivitas pembelajaran dari satu halaman.',
             'role' => 'admin',
             'dashboardStats' => [
-                ['label' => 'Total Mapel', 'value' => Subject::query()->count(), 'detail' => 'Mata pelajaran aktif di portal'],
                 ['label' => 'Total Materi', 'value' => Material::query()->count(), 'detail' => 'Bab utama yang sudah dibuat guru'],
                 ['label' => 'Total Kuis', 'value' => Quiz::query()->count(), 'detail' => 'Latihan soal tersedia'],
                 ['label' => 'Attempt Kuis', 'value' => QuizAttempt::query()->count(), 'detail' => 'Pengerjaan kuis oleh siswa'],
@@ -38,7 +35,7 @@ class DashboardController extends Controller
     public function guru(): View
     {
         $subjects = Subject::query()
-            ->withCount(['materials', 'materialSubsections'])
+            ->withCount('materials')
             ->latest()
             ->get();
 
@@ -56,10 +53,9 @@ class DashboardController extends Controller
             'subjects' => $subjects,
             'recentQuizzes' => $recentQuizzes,
             'dashboardStats' => [
-                ['label' => 'Total Mapel', 'value' => $subjects->count(), 'detail' => 'Mapel yang sudah tersedia'],
                 ['label' => 'Total Materi', 'value' => Material::query()->count(), 'detail' => 'Bab utama seluruh mapel'],
                 ['label' => 'Total Kuis', 'value' => Quiz::query()->count(), 'detail' => 'Kuis yang sudah dibuat guru'],
-                ['label' => 'Progress Siswa', 'value' => MaterialSubsectionProgress::query()->count(), 'detail' => 'Sub bab yang sudah dibuka siswa'],
+                ['label' => 'Attempt Siswa', 'value' => QuizAttempt::query()->count(), 'detail' => 'Kuis yang sudah dikerjakan siswa'],
             ],
             'progressHighlights' => [
                 ['title' => 'Materi Terstruktur', 'description' => 'Gunakan halaman Materi di sidebar untuk melihat semua mapel dan bab dari satu tempat.'],
@@ -85,15 +81,6 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
-        $totalSubsections = MaterialSubsection::query()
-            ->whereHas('material.subject', fn ($query) => $query->where('kelas', $selectedKelas))
-            ->count();
-
-        $completedSubsections = MaterialSubsectionProgress::query()
-            ->where('user_id', $user->id)
-            ->whereHas('subsection.material.subject', fn ($query) => $query->where('kelas', $selectedKelas))
-            ->count();
-
         $availableQuizzes = Quiz::query()
             ->whereHas('material.subject', fn ($query) => $query->where('kelas', $selectedKelas))
             ->count();
@@ -104,8 +91,8 @@ class DashboardController extends Controller
             ->distinct('quiz_id')
             ->count('quiz_id');
 
-        $progressPercentage = $totalSubsections > 0
-            ? (int) round(($completedSubsections / $totalSubsections) * 100)
+        $progressPercentage = $availableQuizzes > 0
+            ? (int) round(($completedQuizzes / $availableQuizzes) * 100)
             : 0;
 
         $recentQuizAttempts = QuizAttempt::query()
@@ -129,23 +116,26 @@ class DashboardController extends Controller
             'recentQuizAttempts' => $recentQuizAttempts,
             'selectedKelas' => $selectedKelas,
             'dashboardStats' => [
-                ['label' => 'Mapel Aktif', 'value' => $subjects->count(), 'detail' => 'Mapel '.User::kelasLabel($selectedKelas)],
-                ['label' => 'Sub Bab Selesai', 'value' => $completedSubsections, 'detail' => 'Dari '.$totalSubsections.' sub bab'],
                 ['label' => 'Kuis Tersedia', 'value' => $availableQuizzes, 'detail' => 'Bisa dibuka dari menu Kuis'],
                 ['label' => 'Kuis Selesai', 'value' => $completedQuizzes, 'detail' => 'Kuis yang telah diselesaikan'],
+                ['label' => 'Materi', 'value' => $materials->count(), 'detail' => 'Materi terbaru tersedia'],
             ],
             'progressHighlights' => [
-                ['title' => 'Progress Belajar', 'description' => 'Progress sub bab saat ini '.$progressPercentage.'% untuk '.strtolower(User::kelasLabel($selectedKelas)).'.'],
+                ['title' => 'Progress Belajar', 'description' => 'Progress kuis saat ini '.$progressPercentage.'% untuk '.strtolower(User::kelasLabel($selectedKelas)).'.'],
                 ['title' => 'Latihan Soal', 'description' => 'Kuis yang tersedia bisa dibuka dari menu sidebar tanpa harus kembali ke materi.'],
             ],
             'progressPercentage' => $progressPercentage,
-            'completedSubsections' => $completedSubsections,
-            'totalSubsections' => $totalSubsections,
+            'completedQuizzes' => $completedQuizzes,
+            'availableQuizzes' => $availableQuizzes,
         ]);
     }
 
-    public function adminMaterials(): View
+    public function adminMaterials(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectToEnglishSubject()) {
+            return $redirect;
+        }
+
         return view('materials.index', [
             'title' => 'Halaman Materi',
             'role' => 'admin',
@@ -155,8 +145,12 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function guruMaterials(): View
+    public function guruMaterials(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectToEnglishSubject()) {
+            return $redirect;
+        }
+
         return view('materials.index', [
             'title' => 'Halaman Materi',
             'role' => 'guru',
@@ -166,10 +160,14 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function siswaMaterials(Request $request): View
+    public function siswaMaterials(Request $request): View|RedirectResponse
     {
         $user = $request->user();
         $selectedKelas = $this->resolveSelectedKelas($request, $user->kelas);
+
+        if ($redirect = $this->redirectToEnglishSubject($selectedKelas)) {
+            return $redirect;
+        }
 
         return view('materials.index', [
             'title' => 'Halaman Materi',
@@ -286,5 +284,18 @@ class DashboardController extends Controller
     private function buildStudentSubjectQuery(string $selectedKelas)
     {
         return Subject::query()->where('kelas', $selectedKelas);
+    }
+
+    private function redirectToEnglishSubject(?string $kelas = null): ?RedirectResponse
+    {
+        $query = Subject::query()->where('name', 'Bahasa Inggris');
+
+        if ($kelas) {
+            $query->where('kelas', $kelas);
+        }
+
+        $subject = $query->orderBy('id')->first();
+
+        return $subject ? redirect()->route('subjects.show', $subject) : null;
     }
 }

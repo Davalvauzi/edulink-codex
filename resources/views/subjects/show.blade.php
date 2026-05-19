@@ -1,7 +1,7 @@
 @extends('layouts.portal')
 
 @section('heading', $subject->name)
-@section('subtitle', 'Halaman ini menampilkan daftar materi — klik salah satu untuk masuk ke detail dan sub bab di dalamnya.')
+@section('subtitle', 'Halaman ini menampilkan daftar materi. Klik salah satu untuk masuk ke detail materi.')
 
 @section('actions')
     @if ($role === 'guru')
@@ -337,7 +337,7 @@
     @endif
 
     {{-- ── PROGRESS (siswa only) ── --}}
-    @if ($role === 'siswa' && $subject->materials->count() > 0)
+    @if (false && $role === 'siswa' && $subject->materials->count() > 0)
         @php
             $totalMat     = $subject->materials->count();
             $completedMat = $subject->materials->filter(function ($m) use ($user) {

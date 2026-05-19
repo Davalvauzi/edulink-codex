@@ -18,7 +18,21 @@
 @section('heading', 'Tingkatkan AI Kamu')
 @section('subtitle', 'Kelola akses AI Tutor, cek kuota harian, dan upgrade saat membutuhkan sesi belajar tanpa batas.')
 
+@push('styles')
+<style>
+.ai-compact .meta{margin-top:14px;padding:16px;border-radius:14px}
+.ai-compact .cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.ai-compact .card{padding:16px;border-radius:14px}
+.ai-compact .ai-hero{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(220px,.8fr);gap:16px;align-items:center}
+.ai-compact .ai-hero h2{font-size:1.2rem;line-height:1.25;margin:0 0 8px}
+.ai-compact .ai-hero p,.ai-compact .feature-list{font-size:.86rem}
+.ai-compact .ai-quota-value{font-size:1.6rem;margin:8px 0 4px}
+@media(max-width:900px){.ai-compact .ai-hero,.ai-compact .cards{grid-template-columns:1fr}}
+</style>
+@endpush
+
 @section('content')
+<div class="ai-compact">
     @if ($user->hasUnlimitedAiAccess())
         <div class="alert success">
             Selamat! Akses AI Unlimited Anda sudah aktif. Nikmati konsultasi AI tanpa batas.
@@ -61,7 +75,7 @@
     <section class="cards">
         <article class="card">
             <strong>Akun Gratis</strong>
-            <p>Gunakan 7 pertanyaan harian untuk bertanya tentang materi, sub bab, atau hasil kuis.</p>
+            <p>Gunakan 7 pertanyaan harian untuk bertanya tentang materi atau hasil kuis.</p>
         </article>
         <article class="card">
             <strong>Akses Unlimited</strong>
@@ -84,7 +98,7 @@
             <li>Respons cepat untuk pertanyaan tentang materi dan latihan soal.</li>
             <li>Pembahasan jawaban salah dengan penjelasan yang lebih pelan dan terarah.</li>
             <li>Cocok untuk mengulang konsep sebelum kuis atau ujian.</li>
-            <li>Bisa digunakan dari konteks materi, sub bab, maupun hasil kuis.</li>
+            <li>Bisa digunakan dari konteks materi maupun hasil kuis.</li>
         </ul>
     </section>
 
@@ -95,4 +109,5 @@
             <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}">Lihat Detail Pembayaran & Upgrade</a>
         </div>
     @endif
+</div>
 @endsection

@@ -94,6 +94,22 @@
     animation: fadeIn .7s .25s ease both;
 }
 
+.material-cover {
+    margin-bottom: 22px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid #c4e8d1;
+    background: #f8fffe;
+    animation: fadeUp .45s .1s ease both;
+}
+
+.material-cover img {
+    display: block;
+    width: 100%;
+    max-height: 360px;
+    object-fit: cover;
+}
+
 /* ── INFO CARDS ROW ── */
 .info-row {
     display: grid;
@@ -286,6 +302,52 @@
     animation: fadeUp .45s .28s ease both;
 }
 
+.subsection-section {
+    background: #fff;
+    border: 1.5px solid #c4e8d1;
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 18px;
+    animation: fadeUp .45s .24s ease both;
+}
+
+.subsection-list { display: flex; flex-direction: column; gap: 10px }
+
+.subsection-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    border-radius: 11px;
+    border: 1.5px solid #e2f5ea;
+    background: #f8fffe;
+    color: inherit;
+    text-decoration: none;
+    transition: all .2s;
+}
+
+.subsection-item:hover {
+    border-color: #22c55e;
+    background: #ecfdf5;
+    transform: translateX(4px);
+}
+
+.subsection-item__thumb {
+    width: 54px; height: 54px;
+    border-radius: 11px;
+    object-fit: cover;
+    background: #dcfce7;
+    flex-shrink: 0;
+}
+
+.subsection-item__placeholder {
+    display: flex; align-items: center; justify-content: center;
+    color: #166534; font-weight: 800;
+}
+
+.subsection-item__info { flex: 1; min-width: 0 }
+.subsection-item__title { font-size: .9rem; font-weight: 800; color: #0d1f14; margin-bottom: 4px }
+.subsection-item__meta { font-size: .72rem; color: #3d6b4f; font-weight: 600 }
+.subsection-item__action { font-size: .75rem; font-weight: 800; color: #15803d; white-space: nowrap }
+
 .quiz-list { display: flex; flex-direction: column; gap: 10px }
 
 .quiz-item {
@@ -411,6 +473,12 @@
     </div>
 
     {{-- ── INFO CARDS ── --}}
+    @if ($material->image_source)
+        <div class="material-cover">
+            <img src="{{ $material->image_source }}" alt="Gambar materi {{ $material->title }}">
+        </div>
+    @endif
+
     <div class="info-row">
         <div class="info-card">
             <div class="info-card-icon">👨‍🏫</div>
@@ -449,7 +517,7 @@
         <div class="prose">{!! $material->description !!}</div>
     </div>
 
-    {{-- ── FILE PDF ── --}}
+    {{-- FILE PDF --}}
     <div class="pdf-section">
         <div class="sec-head">
             <div class="sec-head-line"></div>
@@ -512,3 +580,5 @@
     </div>
 
 @endsection
+
+

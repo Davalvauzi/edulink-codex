@@ -139,10 +139,10 @@ class StudentAiTutor
             'Fokus pada penjelasan konsep, koreksi miskonsepsi, dan langkah belajar berikutnya.',
             'Jika konteks percakapan memiliki kuis, perlakukan kuis sebagai sumber utama. Bahas nomor soal, opsi jawaban, pembahasan guru, dan hasil attempt sebelum memperluas ke materi.',
             'Jika pertanyaan siswa terkait jawaban kuis yang salah, jelaskan kenapa salah dan bagaimana menemukan jawaban yang benar. Jangan hanya menyebut kunci jawaban.',
-            'Gunakan isi file materi, ringkasan materi, sub bab, kuis/latihan soal terkait, dan kemampuan penalaran Anda sebagai sumber pendukung.',
+            'Gunakan isi file materi, ringkasan materi, kuis/latihan soal terkait, dan kemampuan penalaran Anda sebagai sumber pendukung.',
             'Jangan mengaku melihat data yang tidak ada. Jika konteks kurang, katakan dengan jujur lalu tetap bantu berdasarkan informasi yang tersedia.',
             'Jawaban maksimal 220 kata, ringkas, jelas, dan boleh pakai bullet singkat bila membantu.',
-            'Ajak siswa membuka materi, sub bab, atau mencoba soal serupa hanya jika itu membantu menjawab pertanyaan.',
+            'Ajak siswa membuka materi atau mencoba soal serupa hanya jika itu membantu menjawab pertanyaan.',
             '',
             'Profil siswa:',
             '- Nama: '.$user->name,
@@ -158,12 +158,6 @@ class StudentAiTutor
             $lines[] = $quiz ? 'Materi pendukung untuk kuis:' : 'Bab yang sedang dipelajari:';
             $lines[] = '- Judul: '.$material->title;
             $lines[] = '- Ringkasan: '.$this->cleanText($material->description, 1200);
-            $lines[] = '- Daftar sub bab: '.$material->subsections()
-                ->orderBy('position')
-                ->get()
-                ->map(fn (MaterialSubsection $item) => $item->position.'. '.$item->title)
-                ->implode('; ');
-
             $fileContext = $this->buildMaterialFileContext($material);
 
             if ($fileContext !== '') {
@@ -362,7 +356,7 @@ class StudentAiTutor
         }
 
         if ($subsection) {
-            return 'Konsultasi sub bab '.$subsection->title;
+            return 'Konsultasi materi '.$subsection->material?->title;
         }
 
         if ($material) {
@@ -383,11 +377,11 @@ class StudentAiTutor
         }
 
         if ($subsection) {
-            return 'AI akan fokus pada isi sub bab aktif dan menghubungkannya ke bab utama bila diperlukan.';
+            return 'AI akan fokus pada materi aktif dan menghubungkannya ke kuis bila diperlukan.';
         }
 
         if ($material) {
-            return 'AI akan memakai ringkasan bab, daftar sub bab, dan riwayat kuis terkait materi ini.';
+            return 'AI akan memakai ringkasan materi dan riwayat kuis terkait materi ini.';
         }
 
         return 'Ajukan pertanyaan tentang materi pembelajaran, konsep yang belum paham, atau minta bantuan memahami kesalahan saat kuis.';

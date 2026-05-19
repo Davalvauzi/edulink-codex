@@ -30,6 +30,7 @@
             Soal {{ $index + 1 }}
         </div>
 
+        <div class="cq-question-media-grid">
         {{-- Link Gambar --}}
         <div class="cq-field">
             <label class="cq-label">
@@ -81,6 +82,7 @@
             @error("questions.{$index}.image_file")
                 <div class="cq-error-msg">{{ $message }}</div>
             @enderror
+        </div>
         </div>
 
         {{-- Teks Pertanyaan --}}

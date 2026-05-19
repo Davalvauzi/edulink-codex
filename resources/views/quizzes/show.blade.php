@@ -449,6 +449,15 @@
     font-size:.9rem;font-weight:800;
 }
 .qs-guru-q-sub {font-size:.78rem;color:var(--ink3);margin-top:2px}
+.qs-attempt-table-wrap {
+    background:var(--sf);border:2px solid var(--bd);border-radius:var(--r);
+    overflow:hidden;margin:18px 0 24px;animation:fadeUp .35s ease both;
+}
+.qs-attempt-table {width:100%;border-collapse:collapse;font-size:.84rem}
+.qs-attempt-table th,.qs-attempt-table td {padding:11px 14px;border-bottom:1px solid var(--g100);text-align:left;vertical-align:top}
+.qs-attempt-table th {background:var(--sf2);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
+.qs-attempt-table tr:last-child td {border-bottom:0}
+.qs-attempt-answer {font-size:.78rem;color:var(--ink3);margin-top:4px}
 
 /* SECTION TITLE */
 .qs-section-title {
@@ -591,6 +600,52 @@
                 </div>
             @endforeach
         </div>
+
+        <div class="qs-section-title" style="margin-top:22px">Result Kuis Siswa</div>
+        @if (($quizAttempts ?? collect())->isEmpty())
+            <div class="qs-desc">
+                <div class="qs-desc-text">Belum ada siswa yang mengerjakan kuis ini.</div>
+            </div>
+        @else
+            <div class="qs-attempt-table-wrap">
+                <table class="qs-attempt-table">
+                    <thead>
+                        <tr>
+                            <th>Siswa</th>
+                            <th>Skor</th>
+                            <th>Benar</th>
+                            <th>Waktu</th>
+                            <th>Ringkasan Jawaban</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($quizAttempts as $attempt)
+                            <tr>
+                                <td>
+                                    <strong>{{ $attempt->user?->name ?? 'Siswa' }}</strong>
+                                    <div class="qs-attempt-answer">{{ $attempt->user?->email }}</div>
+                                </td>
+                                <td><span class="qs-key-pill">Skor {{ $attempt->score }}</span></td>
+                                <td>{{ $attempt->correct_answers }}/{{ $attempt->total_questions }}</td>
+                                <td>{{ $attempt->submitted_at?->format('d M Y H:i') ?? '-' }}</td>
+                                <td>
+                                    @foreach ($attempt->answers->sortBy(fn ($answer) => $answer->question?->position) as $answer)
+                                        <div class="qs-attempt-answer">
+                                            Soal {{ $answer->question?->position }}: Jawaban siswa: {{ strtoupper($answer->selected_option) }}
+                                            ({{ $answer->is_correct ? 'Benar' : 'Salah' }})
+                                        </div>
+                                    @endforeach
+                                </td>
+                                <td>
+                                    <a class="qs-btn-soft" target="_blank" href="{{ route('quizzes.attempts.print', [$subject, $material, $quiz, $attempt]) }}">Print PDF</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
 
     {{-- ============================================================
          SISWA VIEW

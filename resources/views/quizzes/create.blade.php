@@ -70,12 +70,12 @@
    ============================================================ */
 .cq-card {
     background:var(--sf);border:2px solid var(--bd);border-radius:var(--r);
-    padding:26px 28px;margin-bottom:18px;
+    padding:16px 18px;margin-bottom:12px;
     animation:cq-fadeUp .4s ease both;
 }
 .cq-card-title {
     font-family:'Bricolage Grotesque',sans-serif;
-    font-size:.95rem;font-weight:800;margin-bottom:18px;
+    font-size:.9rem;font-weight:800;margin-bottom:12px;
     display:flex;align-items:center;gap:8px;
 }
 .cq-card-title-icon {
@@ -87,7 +87,7 @@
 /* ============================================================
    FORM
    ============================================================ */
-.cq-field { margin-bottom:16px }
+.cq-field { margin-bottom:10px }
 .cq-field:last-child { margin-bottom:0 }
 .cq-label {
     display:block;font-size:.8rem;font-weight:700;
@@ -106,7 +106,7 @@
     box-shadow:0 0 0 3px rgba(22,163,74,.12);
 }
 .cq-input::placeholder,.cq-textarea::placeholder { color:#a7c4b0 }
-.cq-textarea { resize:vertical;min-height:80px;line-height:1.6 }
+.cq-textarea { resize:vertical;min-height:68px;line-height:1.5 }
 .cq-select {
     cursor:pointer;appearance:none;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233d6b4f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -138,7 +138,7 @@
    ============================================================ */
 .cq-tabs-bar {
     display:flex;align-items:center;gap:8px;
-    margin-bottom:20px;padding-bottom:4px;
+    margin-bottom:12px;padding-bottom:4px;
     overflow-x:auto;scrollbar-width:none;
     animation:cq-fadeUp .4s ease both;
 }
@@ -179,7 +179,7 @@
 .cq-options-list { display:flex;flex-direction:column;gap:10px }
 .cq-option-row {
     display:flex;align-items:center;gap:10px;
-    padding:10px 14px;border-radius:var(--rsm);
+    padding:8px 12px;border-radius:var(--rsm);
     border:2px solid var(--bd);background:var(--sf2);
     transition:border-color .2s;
     animation:cq-slideIn .3s ease both;
@@ -215,7 +215,7 @@
    ============================================================ */
 .cq-img-upload-area {
     border:2px dashed var(--bd2);border-radius:var(--rsm);
-    background:var(--sf2);padding:20px;text-align:center;
+    background:var(--sf2);padding:12px;text-align:center;
     cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
 }
 .cq-img-upload-area:hover { border-color:var(--g400);background:var(--g100) }
@@ -232,7 +232,7 @@
     border:2px solid var(--g400);background:#000;display:none;
 }
 .cq-img-preview-wrap.has-img { display:block }
-.cq-img-preview { width:100%;max-height:220px;object-fit:contain;display:block;background:var(--sf2) }
+.cq-img-preview { width:100%;max-height:140px;object-fit:contain;display:block;background:var(--sf2) }
 .cq-img-remove {
     position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:8px;
     background:rgba(220,38,38,.88);color:#fff;border:none;cursor:pointer;
@@ -245,13 +245,14 @@
 .cq-img-url-row { display:flex;align-items:center;gap:8px;margin-bottom:8px }
 .cq-img-url-row .cq-input { margin-bottom:0 }
 .cq-img-divider { font-size:.72rem;font-weight:700;color:var(--ink3);white-space:nowrap }
+.cq-question-media-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start }
 
 /* ============================================================
    EXPLANATION
    ============================================================ */
 .cq-exp-wrap {
     border:2px solid #99f6e4;background:rgba(13,148,136,.05);
-    border-radius:var(--rsm);padding:14px 16px;
+    border-radius:var(--rsm);padding:10px 12px;
 }
 .cq-exp-label {
     font-size:.7rem;font-weight:800;text-transform:uppercase;
@@ -298,7 +299,7 @@
    ============================================================ */
 .cq-footer-actions {
     display:flex;align-items:center;justify-content:space-between;
-    gap:12px;padding:20px 0 8px;border-top:2px solid var(--bd);margin-top:8px;
+    gap:10px;padding:14px 0 4px;border-top:2px solid var(--bd);margin-top:6px;
     flex-wrap:wrap;
 }
 .cq-footer-left  { display:flex;align-items:center;gap:10px }
@@ -343,6 +344,7 @@
 
 @media(max-width:640px) {
     .cq-field-row,.cq-field-row-3,.cq-field-row-4 { grid-template-columns:1fr }
+    .cq-question-media-grid { grid-template-columns:1fr }
     .cq-footer-actions { flex-direction:column }
     .cq-btn-save { width:100%;justify-content:center }
 }
@@ -687,6 +689,7 @@ function buildPanelHTML(idx) {
       Soal ${idx + 1}
     </div>
 
+    <div class="cq-question-media-grid">
     <!-- Gambar: URL -->
     <div class="cq-field">
       <label class="cq-label">Link Gambar <span style="font-weight:400;color:var(--ink3)">(opsional)</span></label>
@@ -719,6 +722,7 @@ function buildPanelHTML(idx) {
           <div class="cq-img-upload-hint">JPG, PNG, GIF, WebP · Maks. 4 MB</div>
         </div>
       </div>
+    </div>
     </div>
 
     <!-- Teks Soal -->

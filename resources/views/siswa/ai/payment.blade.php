@@ -26,7 +26,23 @@
     <a class="btn btn-soft" href="{{ route('siswa.ai.index') }}">Kembali</a>
 @endsection
 
+@push('styles')
+<style>
+.payment-compact .meta{margin-top:14px;padding:16px;border-radius:14px}
+.payment-compact .payment-grid{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(0,1.1fr);gap:16px;align-items:start}
+.payment-compact .qr-panel,.payment-compact .payment-copy{min-width:0}
+.payment-compact .qr-frame{display:flex;align-items:center;justify-content:center;max-height:calc(100vh - 290px);min-height:220px;overflow:hidden}
+.payment-compact .qr-frame img{max-width:100%;max-height:calc(100vh - 320px);object-fit:contain;display:block}
+.payment-compact .info-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.payment-compact .explanation-card{padding:12px;border-radius:12px;border:1px solid var(--bd);background:#fff}
+.payment-compact .material-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}
+.payment-compact .material-form .field-full{width:auto;flex-basis:auto}
+@media(max-width:900px){.payment-compact .payment-grid,.payment-compact .material-form{grid-template-columns:1fr}.payment-compact .qr-frame,.payment-compact .qr-frame img{max-height:55vh}}
+</style>
+@endpush
+
 @section('content')
+<div class="payment-compact">
     <section class="meta payment-grid">
         <article class="qr-panel">
             <span class="subject-badge">QR Pembayaran</span>
@@ -83,4 +99,5 @@
             </div>
         </form>
     @endif
+</div>
 @endsection

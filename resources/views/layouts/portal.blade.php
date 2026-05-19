@@ -52,14 +52,13 @@
                  request()->routeIs($role . '.materials') ||
                  request()->routeIs('subjects.show') ||
                  request()->routeIs('materials.*') ||
-                 request()->routeIs('guru.subjects.materials.*') ||
-                 request()->routeIs('guru.materials.subsections.*')
+                 request()->routeIs('guru.subjects.materials.*')
                ) ? 'active' : ''
              }}">
             <span class="l-sidebar__nav-icon">📚</span>
             <span>
               Materi
-              <span class="l-sidebar__nav-sub">Mapel, bab, dan sub bab</span>
+              <span class="l-sidebar__nav-sub">Mapel dan materi</span>
             </span>
           </a>
         </li>
@@ -87,8 +86,21 @@
                class="l-sidebar__nav-link {{ request()->routeIs('siswa.ai.*') ? 'active' : '' }}">
               <span class="l-sidebar__nav-icon">🤖</span>
               <span>
-                Tanya AI
+                Tingkatkan AI Kamu
                 <span class="l-sidebar__nav-sub">Konsultasi materi & kuis</span>
+              </span>
+            </a>
+          </li>
+        @endif
+
+        @if($role === 'admin')
+          <li class="l-sidebar__nav-item">
+            <a href="{{ route('admin.ai-payments.index') }}"
+               class="l-sidebar__nav-link {{ request()->routeIs('admin.ai-payments.*') ? 'active' : '' }}">
+              <span class="l-sidebar__nav-icon">AI</span>
+              <span>
+                Konfirmasi Akses AI
+                <span class="l-sidebar__nav-sub">Setujui upgrade siswa</span>
               </span>
             </a>
           </li>
@@ -137,11 +149,6 @@
       </div>
 
       <div class="l-topbar__right">
-
-        <div class="l-topbar__btn" title="Notifikasi">
-          🔔
-          <span class="l-topbar__notif-dot"></span>
-        </div>
 
         <div class="l-topbar__avatar" title="{{ auth()->user()->name ?? '' }}">
           🎓

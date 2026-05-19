@@ -21,7 +21,7 @@
         <div class="section-title">
             <div>
                 <strong>Daftar Mata Pelajaran</strong>
-                <p>Pilih mapel untuk membuka halaman bab dan sub bab yang ada di dalamnya.</p>
+                <p>Pilih mapel untuk membuka daftar materi di dalamnya.</p>
             </div>
         </div>
 

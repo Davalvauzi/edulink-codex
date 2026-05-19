@@ -21,6 +21,7 @@ class AdminAiPaymentController extends Controller
             ->get();
 
         return view('admin.ai-payments.index', [
+            'title' => 'Konfirmasi Akses AI',
             'role' => $user->role,
             'user' => $user,
             'pendingRequests' => $pendingRequests,

@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
-use App\Models\MaterialSubsection;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class MaterialController extends Controller
@@ -32,14 +30,15 @@ class MaterialController extends Controller
         $data = $this->validateMaterial($request);
 
         [$filePath, $fileName] = $this->storeUploadedFile($request);
-        $thumbnailPath = $this->storeThumbnail($request);
+        [$imagePath, $imageName] = $this->storeImage($request);
 
         $material = Material::query()->create([
             'subject_id'  => $subject->id,
             'title'       => $data['title'],
             'topic'       => $data['topic'] ?? null,
             'duration'    => $data['duration'] ?? null,
-            'thumbnail'   => $thumbnailPath,
+            'image_path'  => $imagePath,
+            'image_name'  => $imageName,
             'description' => $data['description'],
             'file_path'   => $filePath,
             'file_name'   => $fileName,
@@ -62,17 +61,7 @@ class MaterialController extends Controller
             'creator',
             'subject.creator',
             'quizzes' => fn ($query) => $query->withCount('questions')->with('creator'),
-            'subsections' => fn ($query) => $query->with(
-                $user->role === 'siswa'
-                    ? ['creator', 'progressRecords' => fn ($progressQuery) => $progressQuery->where('user_id', $user->id)]
-                    : ['creator', 'progressRecords']
-            ),
         ]);
-
-        [$completedSubsections, $progressPercentage, $subsections] = $this->buildProgressSummary(
-            $material->subsections,
-            $user->role === 'siswa'
-        );
 
         return view('materials.show', [
             'title'               => $material->title,
@@ -81,10 +70,6 @@ class MaterialController extends Controller
             'subject'             => $subject,
             'material'            => $material,
             'quizzes'             => $material->quizzes,
-            'subsections'         => $subsections,
-            'completedSubsections' => $completedSubsections,
-            'totalSubsections'    => $material->subsections->count(),
-            'progressPercentage'  => $progressPercentage,
         ]);
     }
 
@@ -110,13 +95,14 @@ class MaterialController extends Controller
         $data = $this->validateMaterial($request);
 
         [$filePath, $fileName] = $this->replaceUploadedFile($request, $material);
-        $thumbnailPath = $this->replaceThumbnail($request, $material);
+        [$imagePath, $imageName] = $this->replaceImage($request, $material);
 
         $material->update([
             'title'       => $data['title'],
             'topic'       => $data['topic'] ?? null,
             'duration'    => $data['duration'] ?? null,
-            'thumbnail'   => $thumbnailPath,
+            'image_path'  => $imagePath,
+            'image_name'  => $imageName,
             'description' => $data['description'],
             'file_path'   => $filePath,
             'file_name'   => $fileName,
@@ -136,8 +122,8 @@ class MaterialController extends Controller
             Storage::disk('public')->delete($material->file_path);
         }
 
-        if ($material->thumbnail) {
-            Storage::disk('public')->delete($material->thumbnail);
+        if ($material->image_path) {
+            Storage::disk('public')->delete($material->image_path);
         }
 
         $material->delete();
@@ -188,53 +174,36 @@ class MaterialController extends Controller
         return $this->storeUploadedFile($request);
     }
 
-    private function storeThumbnail(Request $request): ?string
+    private function storeImage(Request $request): array
     {
         if (! $request->hasFile('thumbnail')) {
-            return null;
+            return [null, null];
         }
 
-        return $request->file('thumbnail')->store('thumbnails', 'public');
+        $image = $request->file('thumbnail');
+
+        return [
+            $image->store('materials/images', 'public'),
+            $image->getClientOriginalName(),
+        ];
     }
 
-    private function replaceThumbnail(Request $request, Material $material): ?string
+    private function replaceImage(Request $request, Material $material): array
     {
         if (! $request->hasFile('thumbnail')) {
-            return $material->thumbnail;
+            return [$material->image_path, $material->image_name];
         }
 
-        if ($material->thumbnail) {
-            Storage::disk('public')->delete($material->thumbnail);
+        if ($material->image_path) {
+            Storage::disk('public')->delete($material->image_path);
         }
 
-        return $this->storeThumbnail($request);
+        return $this->storeImage($request);
     }
 
     private function ensureMaterialBelongsToSubject(Subject $subject, Material $material): void
     {
         abort_if($material->subject_id !== $subject->id, 404);
-    }
-
-    private function buildProgressSummary(Collection $subsections, bool $forStudent): array
-    {
-        $mappedSubsections = $subsections->map(function (MaterialSubsection $subsection) use ($forStudent) {
-            $subsection->is_completed = $forStudent
-                ? $subsection->progressRecords->isNotEmpty()
-                : false;
-
-            $subsection->completed_students_count = $forStudent
-                ? 0
-                : $subsection->progressRecords->whereNotNull('completed_at')->count();
-
-            return $subsection;
-        });
-
-        $completedSubsections = $mappedSubsections->where('is_completed', true)->count();
-        $progressPercentage   = $mappedSubsections->isNotEmpty()
-            ? (int) round(($completedSubsections / $mappedSubsections->count()) * 100)
-            : 0;
-
-        return [$completedSubsections, $progressPercentage, $mappedSubsections];
     }
 
     private function sanitizeDescription(string $html): string

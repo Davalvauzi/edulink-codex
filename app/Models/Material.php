@@ -11,6 +11,8 @@ class Material extends Model
     protected $fillable = [
         'subject_id',
         'title',
+        'topic',
+        'duration',
         'description',
         'image_path',
         'image_name',
@@ -46,5 +48,10 @@ class Material extends Model
         }
 
         return null;
+    }
+
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        return $this->image_source;
     }
 }

@@ -63,6 +63,8 @@
 </div>{{-- /card 1 --}}
 
 
+<div class="cm-media-grid">
+
 {{-- CARD 2 – Thumbnail --}}
 <div class="cm-form-card">
 
@@ -148,6 +150,8 @@
     </div>
 
 </div>{{-- /card 3 --}}
+
+</div>
 
 <script>
 function cmPreviewThumbnail(event) {

@@ -17,12 +17,6 @@
             <span>{{ $material->title }}</span>
         </div>
     @endif
-    @if ($subsection)
-        <div class="static-item">
-            Sub Bab
-            <span>{{ $subsection->title }}</span>
-        </div>
-    @endif
     @if ($quiz)
         <div class="static-item">
             Kuis
@@ -34,6 +28,20 @@
 @section('heading', 'Tanya AI')
 @section('subtitle', $contextDescription)
 
+@push('styles')
+<style>
+.ai-chat-compact .cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:0}
+.ai-chat-compact .card{padding:14px;border-radius:14px}
+.ai-chat-compact .meta{margin-top:14px;padding:16px;border-radius:14px}
+.ai-chat-compact .stack{gap:12px}
+.ai-chat-compact textarea{min-height:92px}
+.ai-chat-compact .chat-thread{gap:10px;max-height:48vh;overflow:auto;padding-right:4px}
+.ai-chat-compact .chat-message{padding:14px;border-radius:14px}
+.ai-chat-compact .question-card{padding:14px;border-radius:14px}
+@media(max-width:900px){.ai-chat-compact .cards{grid-template-columns:1fr}.ai-chat-compact .chat-thread{max-height:none}}
+</style>
+@endpush
+
 @section('actions')
     @if ($conversation->messages->isNotEmpty())
         <form method="POST" action="{{ route('siswa.ai.destroy') }}" onsubmit="return confirm('Reset riwayat chat AI pada konteks ini?');">
@@ -44,9 +52,6 @@
             @endif
             @if ($material)
                 <input type="hidden" name="material" value="{{ $material->id }}">
-            @endif
-            @if ($subsection)
-                <input type="hidden" name="subsection" value="{{ $subsection->id }}">
             @endif
             @if ($quiz)
                 <input type="hidden" name="quiz" value="{{ $quiz->id }}">
@@ -67,6 +72,7 @@
 @endsection
 
 @section('content')
+<div class="ai-chat-compact">
     <section class="cards">
         <article class="card">
             <strong>Konteks Belajar</strong>
@@ -133,7 +139,7 @@
         <div class="section-title">
             <div>
                 <strong>Percakapan</strong>
-                <p>Tanyakan konsep yang belum paham, minta rangkuman sub bab, atau minta dibantu membahas kesalahan saat kuis.</p>
+                <p>Tanyakan konsep yang belum paham, minta rangkuman materi, atau minta dibantu membahas kesalahan saat kuis.</p>
             </div>
         </div>
 
@@ -158,9 +164,6 @@
                 @endif
                 @if ($material)
                     <input type="hidden" name="material" value="{{ $material->id }}">
-                @endif
-                @if ($subsection)
-                    <input type="hidden" name="subsection" value="{{ $subsection->id }}">
                 @endif
                 @if ($quiz)
                     <input type="hidden" name="quiz" value="{{ $quiz->id }}">
@@ -188,4 +191,5 @@
             </div>
         @endif
     </section>
+</div>
 @endsection
