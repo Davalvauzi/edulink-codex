@@ -1,179 +1,275 @@
+<!-- ini blade baru -->
+
 @extends('layouts.portal')
 
-@section('sidebar')
-    <div class="static-item">
-        Dashboard Aktif
-        <span>{{ ucfirst($role) }}</span>
-    </div>
-    @if ($role === 'siswa' && isset($selectedKelas))
-        <div class="static-item">
-            Filter Kelas
-            <span>Menampilkan {{ \App\Models\User::kelasLabel($selectedKelas) }}</span>
-        </div>
-    @endif
-@endsection
-
-@section('heading')
-    @if ($role === 'siswa' && isset($user))
-        Halo {{ $user->name }}
-    @else
-        {{ $title }}
-    @endif
-@endsection
-
-@section('subtitle', $message)
-
-@section('actions')
-    @if ($role === 'siswa' && isset($user))
-        <a class="btn btn-soft" href="{{ route('siswa.profile') }}">Profile</a>
-    @endif
+@section('styles')
 @endsection
 
 @section('content')
-    <section class="cards">
-        @foreach ($dashboardStats ?? [] as $stat)
-            <article class="card">
-                <strong>{{ $stat['label'] }}</strong>
-                <h2 style="margin: 0 0 8px; font-size: 30px;">{{ $stat['value'] }}</h2>
-                <p>{{ $stat['detail'] }}</p>
-            </article>
-        @endforeach
-    </section>
+<div class="dashboard-wrap">
 
-    {{-- @if ($role === 'siswa' && isset($user))
-        <section class="cards">
-            <article class="card">
-                <strong>Tanya AI Tutor</strong>
-                <p>Gunakan fitur chat AI untuk bertanya tentang materi atau membahas kesalahan kuis. Anda bisa mulai tanpa konteks khusus dari halaman ini.</p>
-                <a class="btn btn-primary" href="{{ route('siswa.ai.index') }}">Buka Tanya AI</a>
-            </article>
-        </section>
-    @endif --}}
-
-    @if ($role === 'siswa' && isset($totalLearningQuizzes))
-        <section class="meta">
-            <div class="section-title">
-                <div>
-                    <strong>Progress Pembelajaran</strong>
-                    <p>Progress belajar dihitung dari kuis yang sudah dikerjakan pada kelas yang sedang dipilih.</p>
-                </div>
-            </div>
-
-            <div class="progress-panel">
-                <div>
-                    <strong>{{ $completedLearningQuizzes }} dari {{ $totalLearningQuizzes }} kuis selesai</strong>
-                    <p>Progress keseluruhan untuk {{ strtolower(\App\Models\User::kelasLabel($selectedKelas)) }} saat ini {{ $learningProgressPercentage }}%.</p>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill" style="width: {{ $learningProgressPercentage }}%;"></div>
-                </div>
-                <span class="progress-value">{{ $learningProgressPercentage }}%</span>
-            </div>
-        </section>
-    @endif
-
-    {{-- <section class="meta">
-        <div class="section-title">
-            <div>
-                <strong>Fokus Dashboard</strong>
-                <p>Informasi yang dulu tersebar di sidebar sekarang diringkas di dashboard agar halaman lain lebih bersih.</p>
-            </div>
-        </div>
-
-        <div class="subjects-grid">
-            @foreach ($progressHighlights ?? [] as $highlight)
-                <article class="subject-item">
-                    <h3>{{ $highlight['title'] }}</h3>
-                    <p>{{ $highlight['description'] }}</p>
-                </article>
-            @endforeach
-        </div>
-    </section> --}}
-
+  {{-- ── GREETING BANNER ─────────────────────── --}}
+  <div class="dashboard-greeting">
     @if ($role === 'siswa' && isset($user))
-        {{-- <section class="meta">
-            <div class="section-title">
-                <div>
-                    <strong>Mata Pelajaran Berdasarkan Kelas</strong>
-                    <p>Gunakan filter kelas lalu buka menu Materi untuk melihat semua bab secara lebih fokus.</p>
-                </div>
-            </div>
-
-            <form class="filter-form" method="GET" action="{{ route('siswa.dashboard') }}">
-                <div class="field">
-                    <label for="kelas-filter">Filter Kelas</label>
-                    <select id="kelas-filter" name="kelas">
-                        @foreach (\App\Models\User::kelasOptions() as $kelasValue => $kelasLabel)
-                            <option value="{{ $kelasValue }}" @selected($selectedKelas === $kelasValue)>{{ $kelasLabel }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button class="btn btn-primary" type="submit">Terapkan Filter</button>
-            </form>
-
-            @if (($subjects ?? collect())->isEmpty())
-                <div class="empty-state">Belum ada mata pelajaran untuk {{ strtolower(\App\Models\User::kelasLabel($selectedKelas)) }}.</div>
-            @else
-                <div class="subjects-grid">
-                    @foreach ($subjects as $subject)
-                        <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
-                            <span class="subject-badge">{{ $subject->kelasLabel() }}</span>
-                            <h3>{{ $subject->name }}</h3>
-                            <p>{{ $subject->materials_count }} materi tersedia. Buka mapel ini dari halaman Materi atau
-                                langsung dari sini.</p>
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-        </section> --}}
+      <div class="dashboard-greeting__name">Halo, {{ $user->name }}! 👋</div>
+      <div class="dashboard-greeting__sub">Selamat belajar hari ini. Semangat meraih nilai terbaik!</div>
+      <div class="dashboard-greeting__pills">
+        <span class="dashboard-greeting__pill">🎓 {{ \App\Models\User::kelasLabel($user->kelas) }}</span>
+        <span class="dashboard-greeting__pill">📚 Bahasa Inggris</span>
+        @if(isset($progressPercentage))
+          <span class="dashboard-greeting__pill">⚡ Progres {{ $progressPercentage }}%</span>
+        @endif
+      </div>
     @elseif ($role === 'guru')
-        {{-- <section class="meta">
-            <div class="section-title">
-                <div>
-                    <strong>Mapel Terbaru</strong>
-                    <p>Dashboard guru menampilkan progres konten, sementara detail lengkap bisa dibuka dari menu Materi dan
-                        Kuis.</p>
-                </div>
-            </div>
-
-            @if (($subjects ?? collect())->isEmpty())
-                <div class="empty-state">Belum ada mata pelajaran yang tersimpan.</div>
-            @else
-                <div class="subjects-grid">
-                    @foreach ($subjects as $subject)
-                        <a class="subject-item" href="{{ route('subjects.show', $subject) }}">
-                            <span class="subject-badge">{{ $subject->kelasLabel() }}</span>
-                            <h3>{{ $subject->name }}</h3>
-                            <p>{{ $subject->materials_count }} materi dan {{ $subject->material_subsections_count }} sub
-                                bab sudah tersedia.</p>
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-        </section> --}}
-
-        {{-- <section class="meta">
-            <div class="section-title">
-                <div>
-                    <strong>Kuis Terbaru</strong>
-                    <p>Daftar ini membantu guru memantau kuis yang baru dibuat sebelum membuka halaman Kuis penuh.</p>
-                </div>
-            </div>
-
-            @if (($recentQuizzes ?? collect())->isEmpty())
-                <div class="empty-state">Belum ada kuis yang dibuat pada materi.</div>
-            @else
-                <div class="quiz-grid">
-                    @foreach ($recentQuizzes as $quiz)
-                        <a class="subject-item"
-                            href="{{ route('quizzes.show', [$quiz->material->subject, $quiz->material, $quiz]) }}">
-                            <span class="subject-badge">{{ $quiz->material->subject->name }}</span>
-                            <h3>{{ $quiz->title }}</h3>
-                            <p>{{ $quiz->questions_count }} soal dan {{ $quiz->attempts_count }} attempt siswa.</p>
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-        </section> --}}
+      <div class="dashboard-greeting__name">Halo, Guru! 👋</div>
+      <div class="dashboard-greeting__sub">Pantau perkembangan materi, kuis, dan aktivitas siswa dari satu halaman.</div>
+      <div class="dashboard-greeting__pills">
+        <span class="dashboard-greeting__pill">👩‍🏫 Dashboard Guru</span>
+      </div>
+    @else
+      <div class="dashboard-greeting__name">Dashboard Admin 🛡️</div>
+      <div class="dashboard-greeting__sub">Pantau seluruh aktivitas portal dari satu tempat.</div>
+      <div class="dashboard-greeting__pills">
+        <span class="dashboard-greeting__pill">🔧 Mode Admin</span>
+      </div>
     @endif
+    <div class="dashboard-greeting__emoji">🚀</div>
+  </div>
+
+  {{-- ── PROGRESS (SISWA ONLY) ───────────────── --}}
+  @if ($role === 'siswa' && isset($totalSubsections))
+    <div class="dashboard-progress">
+      <div class="dashboard-progress__top">
+        <div>
+          <span class="dashboard-progress__eyebrow">Progres Kamu</span>
+        </div>
+        <div class="dashboard-progress__badge">
+          <span class="dashboard-progress__badge-dot"></span>
+          Sedang Berjalan
+        </div>
+      </div>
+
+      <div>
+        <div class="dashboard-progress__bar-info">
+          <span class="dashboard-progress__bar-label">Total keseluruhan sub bab diselesaikan</span>
+          <span class="dashboard-progress__bar-pct">{{ $progressPercentage }}%</span>
+        </div>
+        <div class="dashboard-progress__track">
+          <div class="dashboard-progress__fill" style="width:{{ $progressPercentage }}%"></div>
+        </div>
+      </div>
+
+      {{-- ── STAT CARDS ──────── --}}
+      @php
+        $icons   = ['📚', '✅', '✏️', '🏆'];
+        $statDef = $dashboardStats ?? [];
+      @endphp
+      <div class="dashboard-stat-grid">
+        @foreach ($statDef as $i => $stat)
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card__icon">{{ $icons[$i] ?? '📊' }}</div>
+            <div class="dashboard-stat-card__val">{{ $stat['value'] }}</div>
+            <div class="dashboard-stat-card__lbl">{{ $stat['label'] }}</div>
+            <div class="dashboard-stat-card__delta">{{ $stat['detail'] }}</div>
+          </div>
+        @endforeach
+      </div>
+
+    </div>
+  @endif
+
+  {{-- ── GURU / ADMIN: STAT CARDS ────────────── --}}
+  @if ($role === 'guru' || $role === 'admin')
+    @php
+      $icons   = ['📚', '📖', '✏️', '🏆'];
+      $statDef = $dashboardStats ?? [];
+    @endphp
+    <div class="dashboard-stat-grid">
+      @foreach ($statDef as $i => $stat)
+        <div class="dashboard-stat-card">
+          <div class="dashboard-stat-card__icon">{{ $icons[$i] ?? '📊' }}</div>
+          <div class="dashboard-stat-card__val">{{ $stat['value'] }}</div>
+          <div class="dashboard-stat-card__lbl">{{ $stat['label'] }}</div>
+          <div class="dashboard-stat-card__delta">{{ $stat['detail'] }}</div>
+        </div>
+      @endforeach
+    </div>
+  @endif
+
+  {{-- ── SISWA: MATERI + RIWAYAT KUIS ────────── --}}
+  @if ($role === 'siswa')
+    <div class="dashboard-two-col">
+
+      {{-- Daftar Mapel --}}
+      <div class="dashboard-section-box">
+        <div class="dashboard-section-box__title">📚 Materi</div>
+        @php
+          $thumbColors = ['green','blue','amber','green','blue'];
+          $thumbIcons  = ['✍️','📖','🖊️','📐','🔬'];
+        @endphp
+
+        @if(($materials ?? collect())->isEmpty())
+          <div class="dashboard-empty">Belum ada materi untuk kelas ini.</div>
+        @else
+          <div class="dashboard-materi-list">
+            @foreach ($materials as $idx => $material)
+              <a href="{{ route('materials.show', [$material->subject, $material]) }}"
+                 class="dashboard-materi-item">
+                <div class="dashboard-materi-item__thumb dashboard-materi-item__thumb--{{ $thumbColors[$idx % count($thumbColors)] }}">
+                  {{ $thumbIcons[$idx % count($thumbIcons)] }}
+                </div>
+                <div class="dashboard-materi-item__info">
+                  <div class="dashboard-materi-item__name">
+                    {{ $material->title }}
+                  </div>
+                </div>
+                <span class="dashboard-materi-item__arrow">→</span>
+              </a>
+            @endforeach
+          </div>
+        @endif
+      </div>
+
+      {{-- Riwayat Latihan Soal --}}
+      <div class="dashboard-section-box">
+        <div class="dashboard-section-box__title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>📊 Riwayat Latihan Soal</span>
+          <a href="{{ route('siswa.quizzes') }}" class="dashboard-section-box__link">Lihat Semua →</a>
+        </div>
+
+        @php
+          $recentAttempts = $recentQuizAttempts ?? collect();
+        @endphp
+
+        @if ($recentAttempts->isEmpty())
+          <div class="dashboard-empty" style="padding:16px;font-size:.8rem;">
+            Belum ada latihan soal yang dikerjakan. <a href="{{ route('siswa.quizzes') }}" style="color:var(--g600);font-weight:700;">Mulai sekarang →</a>
+          </div>
+        @else
+          <div class="dashboard-recent-list">
+            @foreach ($recentAttempts as $attempt)
+              @php
+                $score = $attempt->score;
+                $scoreClass = $score >= 80 ? 'dashboard-recent-item__score--high' : ($score >= 60 ? 'dashboard-recent-item__score--mid' : 'dashboard-recent-item__score--low');
+                $scoreIcon  = $score >= 80 ? '✍️' : ($score >= 60 ? '📝' : '📖');
+                $diffLabel  = $attempt->quiz->questions_count . ' soal';
+                $timeLabel  = $attempt->submitted_at?->diffForHumans() ?? '-';
+              @endphp
+              <a href="{{ route('quizzes.show', [$attempt->quiz->material->subject, $attempt->quiz->material, $attempt->quiz]) }}"
+                 class="dashboard-recent-item" style="text-decoration:none;color:inherit;">
+                <span class="dashboard-recent-item__icon">{{ $scoreIcon }}</span>
+                <div style="flex:1;min-width:0;">
+                  <div class="dashboard-recent-item__name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    {{ $attempt->quiz->title }}
+                  </div>
+                  <div class="dashboard-recent-item__meta">{{ $timeLabel }} · {{ $diffLabel }}</div>
+                </div>
+                <div class="dashboard-recent-item__score {{ $scoreClass }}">{{ $score }}</div>
+              </a>
+            @endforeach
+          </div>
+        @endif
+      </div>
+
+    </div>
+  @endif
+
+  {{-- ── GURU / ADMIN: AKTIVITAS + MAPEL ────── --}}
+  @if ($role === 'guru' || $role === 'admin')
+    <div class="dashboard-two-col">
+
+      {{-- Aktivitas Terbaru --}}
+      <div class="dashboard-section-box">
+        <div class="dashboard-section-box__title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🕐 Aktivitas Terbaru</span>
+        </div>
+        @php
+          $activities = $recentActivities ?? collect();
+        @endphp
+        @if ($activities->isEmpty())
+          <div class="dashboard-empty">Belum ada aktivitas terbaru.</div>
+        @else
+          <div class="dashboard-recent-list">
+            @foreach ($activities as $activity)
+              <div class="dashboard-recent-item">
+                <span class="dashboard-activity-dot dashboard-activity-dot--{{ $activity['type'] }}"></span>
+                <div style="flex:1;min-width:0;">
+                  <div class="dashboard-recent-item__name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    {{ $activity['label'] }}
+                  </div>
+                  <div class="dashboard-recent-item__meta">{{ $activity['meta'] }}</div>
+                </div>
+                <span class="dashboard-activity-badge dashboard-activity-badge--{{ $activity['type'] }}">{{ $activity['type_label'] }}</span>
+              </div>
+            @endforeach
+          </div>
+        @endif
+      </div>
+
+      {{-- Mata Pelajaran --}}
+      <div class="dashboard-section-box">
+        <div class="dashboard-section-box__title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>📚 Mata Pelajaran</span>
+          @if ($role === 'guru')
+            <a href="{{ route('guru.subjects.create') }}" class="dashboard-section-box__link">+ Tambah</a>
+          @endif
+        </div>
+        @php
+          $thumbColors = ['green','blue','amber','green','blue'];
+          $thumbIcons  = ['✍️','📖','🖊️','📐','🔬'];
+        @endphp
+        @if (($subjects ?? collect())->isEmpty())
+          <div class="dashboard-empty">
+            Belum ada mata pelajaran.
+            @if ($role === 'guru')
+              <a href="{{ route('guru.subjects.create') }}" style="color:var(--g600);font-weight:700;">Tambah sekarang →</a>
+            @endif
+          </div>
+        @else
+          <div class="dashboard-materi-list">
+            @foreach ($subjects as $idx => $subject)
+              <a href="{{ route('subjects.show', $subject) }}" class="dashboard-materi-item">
+                <div class="dashboard-materi-item__thumb dashboard-materi-item__thumb--{{ $thumbColors[$idx % count($thumbColors)] }}">
+                  {{ $thumbIcons[$idx % count($thumbIcons)] }}
+                </div>
+                <div class="dashboard-materi-item__info">
+                  <div class="dashboard-materi-item__name">{{ $subject->name }}</div>
+                  <div class="dashboard-materi-item__meta">{{ $subject->materials_count }} materi · {{ $subject->material_subsections_count ?? '-' }} sub bab</div>
+                </div>
+                <span class="dashboard-materi-item__arrow">→</span>
+              </a>
+            @endforeach
+          </div>
+        @endif
+      </div>
+
+    </div>
+
+    {{-- Kuis Terbaru --}}
+    @if (!empty($recentQuizzes) && $recentQuizzes->isNotEmpty())
+      <div class="dashboard-section-box">
+        <div class="dashboard-section-box__title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>✏️ Kuis Terbaru</span>
+          @if ($role === 'guru')
+            <a href="{{ route('guru.quizzes') }}" class="dashboard-section-box__link">Lihat Semua →</a>
+          @else
+            <a href="{{ route('admin.quizzes') }}" class="dashboard-section-box__link">Lihat Semua →</a>
+          @endif
+        </div>
+        <div class="dashboard-quiz-grid">
+          @foreach ($recentQuizzes as $quiz)
+            <a href="{{ route('quizzes.show', [$quiz->material->subject, $quiz->material, $quiz]) }}"
+               class="dashboard-quiz-card">
+              <div class="dashboard-quiz-card__badge">{{ $quiz->material->subject->name ?? 'Mapel' }}</div>
+              <div class="dashboard-quiz-card__title">{{ $quiz->title }}</div>
+              <div class="dashboard-quiz-card__meta">{{ $quiz->questions_count }} soal · {{ $quiz->attempts_count }} attempt siswa</div>
+            </a>
+          @endforeach
+        </div>
+      </div>
+    @endif
+
+  @endif
+
+</div>
 @endsection
