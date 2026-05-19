@@ -1000,6 +1000,20 @@
                             Kuis
                             <span>Lihat latihan soal dan hasilnya</span>
                         </a>
+                        @if ($role === 'siswa')
+                            <a class="{{ request()->routeIs('siswa.ai.index') ? 'active' : '' }}"
+                                href="{{ route('siswa.ai.index') }}">
+                                Tanya AI
+                                <span>Chat dengan AI Tutor untuk materi dan kuis</span>
+                            </a>
+                        @endif
+                        @if ($role === 'admin')
+                            <a class="{{ request()->routeIs('admin.ai-payments.index') ? 'active' : '' }}"
+                                href="{{ route('admin.ai-payments.index') }}">
+                                Konfirmasi AI
+                                <span>Setujui permintaan akses AI siswa</span>
+                            </a>
+                        @endif
                     </div>
                 @endif
 

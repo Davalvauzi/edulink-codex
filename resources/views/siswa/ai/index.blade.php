@@ -78,6 +78,23 @@
         </article>
     </section>
 
+    @if (! $user->hasUnlimitedAiAccess())
+        <section class="cards">
+            <article class="card">
+                <strong>Akses AI Gratis</strong>
+                <p>Anda memiliki {{ $user->remainingAiChats() }} chat gratis tersisa. Setelah habis, akses AI akan diblokir sampai Anda bayar.</p>
+                <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}">Bayar Akses AI</a>
+            </article>
+        </section>
+    @else
+        <section class="cards">
+            <article class="card">
+                <strong>Akses AI Unlimited</strong>
+                <p>Akses Anda sudah dibuka. Tanya AI kapan saja tanpa batas.</p>
+            </article>
+        </section>
+    @endif
+
     @if ($wrongAnswers->isNotEmpty())
         <section class="meta stack">
             <div>
@@ -133,32 +150,42 @@
             </div>
         @endif
 
-        <form class="stack" method="POST" action="{{ route('siswa.ai.store') }}">
-            @csrf
-            @if ($subject)
-                <input type="hidden" name="subject" value="{{ $subject->id }}">
-            @endif
-            @if ($material)
-                <input type="hidden" name="material" value="{{ $material->id }}">
-            @endif
-            @if ($subsection)
-                <input type="hidden" name="subsection" value="{{ $subsection->id }}">
-            @endif
-            @if ($quiz)
-                <input type="hidden" name="quiz" value="{{ $quiz->id }}">
-            @endif
-            @if ($quizAttempt)
-                <input type="hidden" name="attempt" value="{{ $quizAttempt->id }}">
-            @endif
+        @if (! ($hasReachedLimit ?? false))
+            <form class="stack" method="POST" action="{{ route('siswa.ai.store') }}">
+                @csrf
+                @if ($subject)
+                    <input type="hidden" name="subject" value="{{ $subject->id }}">
+                @endif
+                @if ($material)
+                    <input type="hidden" name="material" value="{{ $material->id }}">
+                @endif
+                @if ($subsection)
+                    <input type="hidden" name="subsection" value="{{ $subsection->id }}">
+                @endif
+                @if ($quiz)
+                    <input type="hidden" name="quiz" value="{{ $quiz->id }}">
+                @endif
+                @if ($quizAttempt)
+                    <input type="hidden" name="attempt" value="{{ $quizAttempt->id }}">
+                @endif
 
-            <div class="field field-full">
-                <label for="message">Pertanyaan Anda</label>
-                <textarea id="message" name="message" placeholder="Contoh: kenapa jawaban saya di soal nomor 3 salah? Jelaskan pelan-pelan dan beri contoh baru.">{{ old('message') }}</textarea>
-            </div>
+                <div class="field field-full">
+                    <label for="message">Pertanyaan Anda</label>
+                    <textarea id="message" name="message" placeholder="Contoh: kenapa jawaban saya di soal nomor 3 salah? Jelaskan pelan-pelan dan beri contoh baru.">{{ old('message') }}</textarea>
+                </div>
 
-            <div class="subsection-actions">
-                <button class="btn btn-primary" type="submit">Kirim ke AI</button>
+                <div class="subsection-actions">
+                    <button class="btn btn-primary" type="submit">Kirim ke AI</button>
+                </div>
+            </form>
+        @else
+            <div class="stack">
+                <article class="card">
+                    <strong>Kuota Gratis Habis</strong>
+                    <p>Anda sudah mencapai batas chat gratis. Silakan bayar akses unlimited melalui QR agar bisa terus bertanya ke AI.</p>
+                    <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}">Bayar Akses AI</a>
+                </article>
             </div>
-        </form>
+        @endif
     </section>
 @endsection

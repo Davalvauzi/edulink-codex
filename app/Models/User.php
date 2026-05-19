@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\AiMessage;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -53,7 +54,35 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'ai_tutor_paid_at' => 'datetime',
+            'ai_tutor_payment_requested_at' => 'datetime',
         ];
+    }
+
+    public function hasUnlimitedAiAccess(): bool
+    {
+        return $this->ai_tutor_paid_at !== null;
+    }
+
+    public function hasRequestedAiPayment(): bool
+    {
+        return $this->ai_tutor_payment_requested_at !== null && $this->ai_tutor_paid_at === null;
+    }
+
+    public function remainingAiChats(): int
+    {
+        $limit = config('ai.unpaid_chat_limit', 5);
+
+        if ($this->hasUnlimitedAiAccess()) {
+            return PHP_INT_MAX;
+        }
+
+        $used = AiMessage::query()
+            ->where('role', 'assistant')
+            ->whereHas('conversation', fn ($query) => $query->where('user_id', $this->id))
+            ->count();
+
+        return max(0, $limit - $used);
     }
 
     public function subjects(): HasMany

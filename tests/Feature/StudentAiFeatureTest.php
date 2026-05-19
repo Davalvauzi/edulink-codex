@@ -41,6 +41,24 @@ class StudentAiFeatureTest extends TestCase
         ]);
     }
 
+    public function test_siswa_can_access_ai_payment_page_and_confirm_payment(): void
+    {
+        [$siswa] = $this->buildLearningContext();
+
+        $paymentPage = $this->actingAs($siswa)->get(route('siswa.ai.payment'));
+
+        $paymentPage->assertOk();
+        $paymentPage->assertSee('Pembayaran AI Tutor');
+        $paymentPage->assertSee('Bayar dengan QR');
+
+        $confirmation = $this->actingAs($siswa)->post(route('siswa.ai.payment.confirm'));
+
+        $confirmation->assertRedirect(route('siswa.ai.index'));
+        $confirmation->assertSessionHas('success');
+
+        $this->assertNotNull($siswa->fresh()->ai_tutor_paid_at);
+    }
+
     public function test_tanya_ai_for_quiz_is_hidden_and_blocked_before_student_submits_answers(): void
     {
         [$siswa, $subject, $material] = $this->buildLearningContext();

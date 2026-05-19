@@ -25,6 +25,7 @@ class DashboardController extends Controller
                 ['label' => 'Total Materi', 'value' => Material::query()->count(), 'detail' => 'Bab utama yang sudah dibuat guru'],
                 ['label' => 'Total Kuis', 'value' => Quiz::query()->count(), 'detail' => 'Latihan soal tersedia'],
                 ['label' => 'Attempt Kuis', 'value' => QuizAttempt::query()->count(), 'detail' => 'Pengerjaan kuis oleh siswa'],
+                ['label' => 'Permintaan Akses AI', 'value' => User::query()->whereNotNull('ai_tutor_payment_requested_at')->whereNull('ai_tutor_paid_at')->count(), 'detail' => 'Siswa yang menunggu konfirmasi pembayaran AI'],
             ],
             'progressHighlights' => [
                 ['title' => 'Aktivitas Materi', 'description' => 'Pantau jumlah mapel, materi, dan kuis untuk memastikan konten belajar terus bertambah.'],

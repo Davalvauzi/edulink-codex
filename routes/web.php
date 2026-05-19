@@ -40,6 +40,18 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:admin')
         ->name('admin.quizzes');
 
+    Route::get('/admin/ai-payments', [\App\Http\Controllers\AdminAiPaymentController::class, 'index'])
+        ->middleware('role:admin')
+        ->name('admin.ai-payments.index');
+
+    Route::post('/admin/ai-payments/{user}/approve', [\App\Http\Controllers\AdminAiPaymentController::class, 'approve'])
+        ->middleware('role:admin')
+        ->name('admin.ai-payments.approve');
+
+    Route::post('/admin/ai-payments/{user}/deny', [\App\Http\Controllers\AdminAiPaymentController::class, 'deny'])
+        ->middleware('role:admin')
+        ->name('admin.ai-payments.deny');
+
     Route::get('/guru/dashboard', [DashboardController::class, 'guru'])
         ->middleware('role:guru')
         ->name('guru.dashboard');
@@ -222,6 +234,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/siswa/ai', [StudentAiController::class, 'store'])
         ->middleware('role:siswa')
         ->name('siswa.ai.store');
+
+    Route::get('/siswa/ai/payment', [StudentAiController::class, 'payment'])
+        ->middleware('role:siswa')
+        ->name('siswa.ai.payment');
+
+    Route::post('/siswa/ai/payment', [StudentAiController::class, 'confirmPayment'])
+        ->middleware('role:siswa')
+        ->name('siswa.ai.payment.confirm');
 
     Route::delete('/siswa/ai', [StudentAiController::class, 'destroyStudentHistory'])
         ->middleware('role:siswa')

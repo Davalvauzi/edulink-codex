@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AiConversation;
+use App\Models\AiMessage;
 use App\Models\Material;
 use App\Models\MaterialSubsection;
 use App\Models\Quiz;
@@ -29,6 +30,20 @@ class StudentAiController extends Controller
 
         if ($redirect = $this->redirectIfQuizAttemptRequired($subject, $material, $quiz, $quizAttempt)) {
             return $redirect;
+        }
+
+        $hasReachedLimit = false;
+        $remainingChats = null;
+
+        if (! $request->user()->hasUnlimitedAiAccess()) {
+            $limit = config('ai.unpaid_chat_limit', 5);
+            $used = AiMessage::query()
+                ->where('role', 'assistant')
+                ->whereHas('conversation', fn ($query) => $query->where('user_id', $request->user()->id))
+                ->count();
+
+            $remainingChats = max(0, $limit - $used);
+            $hasReachedLimit = $used >= $limit;
         }
 
         $conversation = AiConversation::query()
@@ -64,6 +79,8 @@ class StudentAiController extends Controller
             'contextDescription' => $pageContext['contextDescription'],
             'wrongAnswers' => $pageContext['wrongAnswers'],
             'recentAttempts' => $pageContext['recentAttempts'],
+            'hasReachedLimit' => $hasReachedLimit,
+            'remainingChats' => $remainingChats,
         ]);
     }
 
@@ -165,6 +182,49 @@ class StudentAiController extends Controller
         return redirect()
             ->route('quizzes.show', [$subject, $material, $quiz])
             ->with('success', $deletedCount.' riwayat chat AI pada kuis ini berhasil dihapus.');
+    }
+
+    public function payment(Request $request): View
+    {
+        $user = $request->user();
+        abort_if($user->role !== 'siswa', 403);
+
+        $qrImage = config('ai.payment_qr_image');
+        $isAbsoluteUrl = str_starts_with($qrImage, 'http://') || str_starts_with($qrImage, 'https://');
+        $qrImageUrl = $isAbsoluteUrl ? $qrImage : asset($qrImage);
+
+        return view('siswa.ai.payment', [
+            'title' => 'Pembayaran AI Tutor',
+            'qrImageUrl' => $qrImageUrl,
+            'qrImageAlt' => config('ai.payment_qr_image_alt'),
+            'isRequested' => $user->hasRequestedAiPayment(),
+            'role' => $user->role,
+            'user' => $user,
+        ]);
+    }
+
+    public function confirmPayment(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_if($user->role !== 'siswa', 403);
+
+        if ($user->hasUnlimitedAiAccess()) {
+            return redirect()
+                ->route('siswa.ai.payment')
+                ->with('success', 'Akses AI Anda sudah unlimited.');
+        }
+
+        if ($user->hasRequestedAiPayment()) {
+            return redirect()
+                ->route('siswa.ai.payment')
+                ->with('success', 'Permintaan konfirmasi admin sudah terkirim.');
+        }
+
+        $user->forceFill(['ai_tutor_payment_requested_at' => now()])->save();
+
+        return redirect()
+            ->route('siswa.ai.payment')
+            ->with('success', 'Permintaan konfirmasi admin sudah terkirim. Admin akan memeriksa pembayaran Anda.');
     }
 
     public function destroyStudentHistory(Request $request): RedirectResponse

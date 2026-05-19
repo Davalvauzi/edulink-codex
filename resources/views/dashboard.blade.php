@@ -40,6 +40,16 @@
         @endforeach
     </section>
 
+    @if ($role === 'siswa' && isset($user))
+        <section class="cards">
+            <article class="card">
+                <strong>Tanya AI Tutor</strong>
+                <p>Gunakan fitur chat AI untuk bertanya tentang materi atau membahas kesalahan kuis. Anda bisa mulai tanpa konteks khusus dari halaman ini.</p>
+                <a class="btn btn-primary" href="{{ route('siswa.ai.index') }}">Buka Tanya AI</a>
+            </article>
+        </section>
+    @endif
+
     @if ($role === 'siswa' && isset($totalSubsections))
         <section class="meta">
             <div class="section-title">
