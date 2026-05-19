@@ -1,191 +1,69 @@
 @extends('layouts.portal')
 
-@section('sidebar')
-    <a class="{{ request()->routeIs('siswa.ai.index') ? 'active' : '' }}" href="{{ route('siswa.ai.index') }}">
-        Tanya AI
-        <span>Konsultasi materi dan bahas kesalahan kuis</span>
-    </a>
-    @if ($subject)
-        <div class="static-item">
-            Mata Pelajaran
-            <span>{{ $subject->name }}</span>
-        </div>
-    @endif
-    @if ($material)
-        <div class="static-item">
-            Materi
-            <span>{{ $material->title }}</span>
-        </div>
-    @endif
-    @if ($subsection)
-        <div class="static-item">
-            Sub Bab
-            <span>{{ $subsection->title }}</span>
-        </div>
-    @endif
-    @if ($quiz)
-        <div class="static-item">
-            Kuis
-            <span>{{ $quiz->title }}</span>
-        </div>
-    @endif
-@endsection
-
-@section('heading', 'Tanya AI')
-@section('subtitle', $contextDescription)
-
-@section('actions')
-    @if ($conversation->messages->isNotEmpty())
-        <form method="POST" action="{{ route('siswa.ai.destroy') }}" onsubmit="return confirm('Reset riwayat chat AI pada konteks ini?');">
-            @csrf
-            @method('DELETE')
-            @if ($subject)
-                <input type="hidden" name="subject" value="{{ $subject->id }}">
-            @endif
-            @if ($material)
-                <input type="hidden" name="material" value="{{ $material->id }}">
-            @endif
-            @if ($subsection)
-                <input type="hidden" name="subsection" value="{{ $subsection->id }}">
-            @endif
-            @if ($quiz)
-                <input type="hidden" name="quiz" value="{{ $quiz->id }}">
-            @endif
-            @if ($quizAttempt)
-                <input type="hidden" name="attempt" value="{{ $quizAttempt->id }}">
-            @endif
-            <button class="btn btn-danger" type="submit">Reset History AI</button>
-        </form>
-    @endif
-    @if ($quiz)
-        <a class="btn btn-soft" href="{{ route('quizzes.show', [$subject, $material, $quiz]) }}">Kembali ke Kuis</a>
-    @elseif ($material)
-        <a class="btn btn-soft" href="{{ route('materials.show', [$subject, $material]) }}">Kembali ke Materi</a>
-    @else
-        <a class="btn btn-soft" href="{{ route('siswa.dashboard') }}">Kembali</a>
-    @endif
-@endsection
+@section('heading', 'Tingkatkan AI Kamu')
+@section('subtitle', 'Akses unlimited ke AI Tutor untuk pembelajaran yang lebih efektif')
 
 @section('content')
+    @if ($user->hasUnlimitedAiAccess())
+        <div class="alert alert-success">
+            Selamat! Akses AI Unlimited Anda sudah aktif. Nikmati konsultasi AI tanpa batas.
+        </div>
+    @elseif ($user->hasRequestedAiPayment())
+        <div class="alert alert-info">
+            Permintaan upgrade Anda sedang ditinjau admin. Anda akan menerima notifikasi segera setelah disetujui.
+        </div>
+    @endif
+
     <section class="cards">
         <article class="card">
-            <strong>Konteks Belajar</strong>
-            <p>{{ $contextTitle }}</p>
+            <strong>✨ Fitur Premium</strong>
+            <p><strong>Tanya AI Unlimited</strong> memberikan akses tanpa batas ke AI Tutor untuk membahas materi, menjawab pertanyaan, dan melatih konsep pelajaran apapun.</p>
         </article>
         <article class="card">
-            <strong>Riwayat Pesan</strong>
-            <p>{{ $conversation->messages->count() }} pesan tersimpan pada konteks ini.</p>
+            <strong>🎯 Untuk Akun Gratis</strong>
+            <p>Setiap hari Anda mendapatkan <strong>7 pertanyaan</strong> untuk bertanya kepada AI Tutor. Reset otomatis setiap tengah malam.</p>
+        </article>
+        <article class="card">
+            <strong>💎 Untuk Langganan Premium</strong>
+            <p><strong>Pertanyaan unlimited</strong> tanpa batasan harian. Tanya AI kapan saja dan berapa kali saja sepanjang tahun.</p>
         </article>
     </section>
 
-    @if (! $user->hasUnlimitedAiAccess())
-        <section class="cards">
-            <article class="card">
-                <strong>Akses AI Gratis</strong>
-                <p>Anda memiliki {{ $user->remainingAiChats() }} chat gratis tersisa. Setelah habis, akses AI akan diblokir sampai Anda bayar.</p>
-                <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}">Bayar Akses AI</a>
-            </article>
-        </section>
-    @else
-        <section class="cards">
-            <article class="card">
-                <strong>Akses AI Unlimited</strong>
-                <p>Akses Anda sudah dibuka. Tanya AI kapan saja tanpa batas.</p>
-            </article>
-        </section>
-    @endif
-
-    @if ($wrongAnswers->isNotEmpty())
-        <section class="meta stack">
+    <section class="cards">
+        <article class="card" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <strong>Kesalahan yang Bisa Dibahas</strong>
-                <p>AI akan memakai daftar ini sebagai konteks tambahan agar penjelasannya lebih relevan dengan kebutuhan Anda.</p>
-            </div>
-
-            <div class="question-list">
-                @foreach ($wrongAnswers as $wrongAnswer)
-                    <article class="question-card compact">
-                        <div class="question-card-header">
-                            <div>
-                                <strong>{{ $wrongAnswer['quiz'] }}</strong>
-                                <p>{{ $wrongAnswer['material'] }}</p>
-                            </div>
-                            <span class="answer-pill wrong">Perlu Dibahas</span>
-                        </div>
-                        <p class="question-text">{{ $wrongAnswer['question'] }}</p>
-                        <div class="explanation-card">
-                            <strong>Jawaban Anda: {{ $wrongAnswer['selected_option'] }}</strong>
-                            <p>Jawaban benar: {{ $wrongAnswer['correct_option'] }}</p>
-                        </div>
-                        @if ($wrongAnswer['explanation'])
-                            <div class="explanation-card">
-                                <strong>Pembahasan Guru</strong>
-                                <p>{{ $wrongAnswer['explanation'] }}</p>
-                            </div>
-                        @endif
-                    </article>
-                @endforeach
-            </div>
-        </section>
-    @endif
-
-    <section class="meta stack">
-        <div class="section-title">
-            <div>
-                <strong>Percakapan</strong>
-                <p>Tanyakan konsep yang belum paham, minta rangkuman sub bab, atau minta dibantu membahas kesalahan saat kuis.</p>
-            </div>
-        </div>
-
-        @if ($conversation->messages->isNotEmpty())
-            <div class="chat-thread">
-                @foreach ($conversation->messages as $message)
-                    <article class="chat-message {{ $message->role === 'assistant' ? 'assistant' : 'user' }}">
-                        <span class="chat-role">{{ $message->role === 'assistant' ? 'AI Tutor' : 'Anda' }}</span>
-                        <div class="prose chat-copy">
-                            {!! nl2br(e($message->content)) !!}
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-        @endif
-
-        @if (! ($hasReachedLimit ?? false))
-            <form class="stack" method="POST" action="{{ route('siswa.ai.store') }}">
-                @csrf
-                @if ($subject)
-                    <input type="hidden" name="subject" value="{{ $subject->id }}">
+                <strong>📊 Riwayat Pesan Anda</strong>
+                @if ($user->hasUnlimitedAiAccess())
+                    <p>Akses unlimited aktif. Gunakan AI Tutor tanpa batasan.</p>
+                @else
+                    <p>Sisa <strong>{{ $user->remainingAiChats() }} pertanyaan</strong> tersedia hari ini dari <strong>7 pertanyaan harian</strong>.</p>
+                    <p style="margin-top: 12px; font-size: 13px; color: #5a6f69;">Gunakan dengan bijak dan reset akan terjadi besok pukul 00:00 WIB.</p>
                 @endif
-                @if ($material)
-                    <input type="hidden" name="material" value="{{ $material->id }}">
-                @endif
-                @if ($subsection)
-                    <input type="hidden" name="subsection" value="{{ $subsection->id }}">
-                @endif
-                @if ($quiz)
-                    <input type="hidden" name="quiz" value="{{ $quiz->id }}">
-                @endif
-                @if ($quizAttempt)
-                    <input type="hidden" name="attempt" value="{{ $quizAttempt->id }}">
-                @endif
-
-                <div class="field field-full">
-                    <label for="message">Pertanyaan Anda</label>
-                    <textarea id="message" name="message" placeholder="Contoh: kenapa jawaban saya di soal nomor 3 salah? Jelaskan pelan-pelan dan beri contoh baru.">{{ old('message') }}</textarea>
-                </div>
-
-                <div class="subsection-actions">
-                    <button class="btn btn-primary" type="submit">Kirim ke AI</button>
-                </div>
-            </form>
-        @else
-            <div class="stack">
-                <article class="card">
-                    <strong>Kuota Gratis Habis</strong>
-                    <p>Anda sudah mencapai batas chat gratis. Silakan bayar akses unlimited melalui QR agar bisa terus bertanya ke AI.</p>
-                    <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}">Bayar Akses AI</a>
-                </article>
             </div>
-        @endif
+            @if (!$user->hasUnlimitedAiAccess())
+                <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}" style="white-space: nowrap; margin-left: 20px;">
+                    Upgrade Sekarang
+                </a>
+            @endif
+        </article>
     </section>
+
+    <section class="cards">
+        <article class="card">
+            <strong>🚀 Manfaat Lainnya</strong>
+            <p>✓ Respons cepat dari AI Tutor<br>
+            ✓ Cocok untuk mempersiapkan ujian<br>
+            ✓ Bantu memahami konsep sulit<br>
+            ✓ Latihan soal dan pembahasan<br>
+            ✓ Akses kapan saja, di mana saja</p>
+        </article>
+    </section>
+
+    @if (!$user->hasUnlimitedAiAccess() && !$user->hasRequestedAiPayment())
+        <div class="meta" style="text-align: center;">
+            <p style="margin: 0 0 16px; color: #5a6f69;">Siap untuk upgrade? Klik tombol di atas atau ikuti proses pembayaran lengkap di halaman upgrade.</p>
+            <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}">Lihat Detail Pembayaran & Upgrade</a>
+        </div>
+    @endif
 @endsection
+

@@ -26,6 +26,16 @@ class StudentAiController extends Controller
         $user = $request->user();
         abort_if($user->role !== 'siswa', 403);
 
+        // Jika tidak ada konteks, tampilkan halaman benefits/upgrade
+        if (!$request->filled('subject') && !$request->filled('material') && !$request->filled('quiz')) {
+            return view('siswa.ai.index', [
+                'title' => 'Tingkatkan AI Kamu',
+                'role' => $user->role,
+                'user' => $user,
+            ]);
+        }
+
+        // Jika ada konteks, tampilkan halaman chat dengan context tersebut
         [$subject, $material, $subsection, $quiz, $quizAttempt] = $this->resolveContext($request);
 
         if ($redirect = $this->redirectIfQuizAttemptRequired($subject, $material, $quiz, $quizAttempt)) {
@@ -36,7 +46,7 @@ class StudentAiController extends Controller
         $remainingChats = null;
 
         if (! $request->user()->hasUnlimitedAiAccess()) {
-            $limit = config('ai.unpaid_chat_limit', 5);
+            $limit = config('ai.unpaid_chat_limit', 7);
             $remainingChats = $request->user()->remainingAiChats();
             $hasReachedLimit = $request->user()->ai_tutor_messages_used >= $limit;
         }
@@ -60,7 +70,7 @@ class StudentAiController extends Controller
 
         $pageContext = $this->tutor->buildPageContext($user, $material, $subsection, $quiz, $quizAttempt);
 
-        return view('siswa.ai.index', [
+        return view('siswa.ai.chat', [
             'title' => 'Tanya AI',
             'role' => $user->role,
             'user' => $user,
