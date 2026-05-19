@@ -1,5 +1,6 @@
 @extends('layouts.portal')
 
+@section('title', 'Konfirmasi Pembayaran AI Tutor')
 @section('heading', 'Konfirmasi Pembayaran AI Tutor')
 @section('subtitle', 'Kelola permintaan akses AI dari siswa setelah mereka membayar melalui QR.')
 
