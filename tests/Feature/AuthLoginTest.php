@@ -773,6 +773,19 @@ class AuthLoginTest extends TestCase
         $showResponse->assertSee('hasilnya 2/4 atau 1/2.', false);
         $showResponse->assertSee('Print PDF');
 
+        $materialResponse = $this->actingAs($siswa)->get(route('materials.show', [$subject, $material]));
+
+        $materialResponse->assertOk();
+        $materialResponse->assertSee('1 dari 1 kuis selesai');
+        $materialResponse->assertSee('100% progress untuk materi Bab Pecahan.');
+        $materialResponse->assertSee('Selesai - Skor 50');
+
+        $dashboardResponse = $this->actingAs($siswa)->get(route('siswa.dashboard'));
+
+        $dashboardResponse->assertOk();
+        $dashboardResponse->assertSee('1 dari 1 kuis selesai');
+        $dashboardResponse->assertSee('saat ini 100%.');
+
         $this->assertDatabaseHas('quiz_attempts', [
             'quiz_id' => $quiz->id,
             'user_id' => $siswa->id,

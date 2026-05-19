@@ -50,13 +50,17 @@ class StudentAiFeatureTest extends TestCase
         $paymentPage->assertOk();
         $paymentPage->assertSee('Pembayaran AI Tutor');
         $paymentPage->assertSee('Bayar dengan QR');
+        $paymentPage->assertSee($siswa->name);
 
-        $confirmation = $this->actingAs($siswa)->post(route('siswa.ai.payment.confirm'));
+        $confirmation = $this->actingAs($siswa)->post(route('siswa.ai.payment.confirm'), [
+            'payment_sender_name' => $siswa->name,
+        ]);
 
-        $confirmation->assertRedirect(route('siswa.ai.index'));
+        $confirmation->assertRedirect(route('siswa.ai.payment'));
         $confirmation->assertSessionHas('success');
 
-        $this->assertNotNull($siswa->fresh()->ai_tutor_paid_at);
+        $this->assertNotNull($siswa->fresh()->ai_tutor_payment_requested_at);
+        $this->assertSame($siswa->name, $siswa->fresh()->ai_tutor_payment_sender_name);
     }
 
     public function test_tanya_ai_for_quiz_is_hidden_and_blocked_before_student_submits_answers(): void

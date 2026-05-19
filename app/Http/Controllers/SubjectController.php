@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Material;
+use App\Models\QuizAttempt;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -51,9 +53,25 @@ class SubjectController extends Controller
             'creator',
             'materials' => fn ($query) => $query
                 ->with('creator')
+                ->withCount('quizzes')
                 ->latest('created_at')
                 ->latest('id'),
         ]);
+
+        if ($user->role === 'siswa') {
+            $subject->materials->each(function (Material $material) use ($user) {
+                $completedQuizzes = QuizAttempt::query()
+                    ->where('user_id', $user->id)
+                    ->whereHas('quiz', fn ($query) => $query->where('material_id', $material->id))
+                    ->distinct('quiz_id')
+                    ->count('quiz_id');
+
+                $material->completed_quizzes_count = $completedQuizzes;
+                $material->learning_progress_percentage = $material->quizzes_count > 0
+                    ? (int) round(($completedQuizzes / $material->quizzes_count) * 100)
+                    : 0;
+            });
+        }
 
         return view('subjects.show', [
             'title' => 'Materi '.$subject->name,

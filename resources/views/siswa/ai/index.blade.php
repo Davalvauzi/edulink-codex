@@ -1,69 +1,98 @@
 @extends('layouts.portal')
 
+@section('sidebar')
+    <div class="static-item">
+        Siswa Login
+        <span>{{ $user->name }}</span>
+    </div>
+    <div class="static-item">
+        Email
+        <span>{{ $user->email }}</span>
+    </div>
+    <div class="static-item">
+        Status AI
+        <span>{{ $user->hasUnlimitedAiAccess() ? 'Unlimited aktif' : ($user->hasRequestedAiPayment() ? 'Menunggu admin' : 'Akun gratis') }}</span>
+    </div>
+@endsection
+
 @section('heading', 'Tingkatkan AI Kamu')
-@section('subtitle', 'Akses unlimited ke AI Tutor untuk pembelajaran yang lebih efektif')
+@section('subtitle', 'Kelola akses AI Tutor, cek kuota harian, dan upgrade saat membutuhkan sesi belajar tanpa batas.')
 
 @section('content')
     @if ($user->hasUnlimitedAiAccess())
-        <div class="alert alert-success">
+        <div class="alert success">
             Selamat! Akses AI Unlimited Anda sudah aktif. Nikmati konsultasi AI tanpa batas.
         </div>
     @elseif ($user->hasRequestedAiPayment())
-        <div class="alert alert-info">
+        <div class="alert info">
             Permintaan upgrade Anda sedang ditinjau admin. Anda akan menerima notifikasi segera setelah disetujui.
         </div>
     @endif
 
-    <section class="cards">
-        <article class="card">
-            <strong>✨ Fitur Premium</strong>
-            <p><strong>Tanya AI Unlimited</strong> memberikan akses tanpa batas ke AI Tutor untuk membahas materi, menjawab pertanyaan, dan melatih konsep pelajaran apapun.</p>
-        </article>
-        <article class="card">
-            <strong>🎯 Untuk Akun Gratis</strong>
-            <p>Setiap hari Anda mendapatkan <strong>7 pertanyaan</strong> untuk bertanya kepada AI Tutor. Reset otomatis setiap tengah malam.</p>
-        </article>
-        <article class="card">
-            <strong>💎 Untuk Langganan Premium</strong>
-            <p><strong>Pertanyaan unlimited</strong> tanpa batasan harian. Tanya AI kapan saja dan berapa kali saja sepanjang tahun.</p>
-        </article>
-    </section>
-
-    <section class="cards">
-        <article class="card" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <strong>📊 Riwayat Pesan Anda</strong>
-                @if ($user->hasUnlimitedAiAccess())
-                    <p>Akses unlimited aktif. Gunakan AI Tutor tanpa batasan.</p>
-                @else
-                    <p>Sisa <strong>{{ $user->remainingAiChats() }} pertanyaan</strong> tersedia hari ini dari <strong>7 pertanyaan harian</strong>.</p>
-                    <p style="margin-top: 12px; font-size: 13px; color: #5a6f69;">Gunakan dengan bijak dan reset akan terjadi besok pukul 00:00 WIB.</p>
+    <section class="meta ai-hero">
+        <div class="ai-hero-copy">
+            <span class="subject-badge">AI Tutor Siswa</span>
+            <h2>Belajar lebih bebas dengan bantuan AI yang paham konteks materi dan kuis.</h2>
+            <p>AI Tutor bisa membantu menjelaskan materi, merangkum bagian yang sulit, dan membahas jawaban kuis yang kurang tepat dengan bahasa yang lebih bertahap.</p>
+            <div class="subsection-actions">
+                @if (! $user->hasUnlimitedAiAccess())
+                    <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}">Upgrade Sekarang</a>
                 @endif
+                <a class="btn btn-soft" href="{{ route('siswa.dashboard') }}">Kembali ke Dashboard</a>
             </div>
-            @if (!$user->hasUnlimitedAiAccess())
-                <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}" style="white-space: nowrap; margin-left: 20px;">
-                    Upgrade Sekarang
-                </a>
+        </div>
+
+        <aside class="ai-status-card">
+            <strong>Status Akun</strong>
+            @if ($user->hasUnlimitedAiAccess())
+                <h3 class="ai-quota-value">Unlimited</h3>
+                <p>Akses AI Anda sudah aktif tanpa batas pertanyaan harian.</p>
+            @else
+                <h3 class="ai-quota-value">{{ $user->remainingAiChats() }}</h3>
+                <p>pertanyaan gratis tersisa hari ini dari 7 pertanyaan harian.</p>
+                <div class="progress-track compact">
+                    <div class="progress-fill" style="width: {{ ($user->remainingAiChats() / 7) * 100 }}%;"></div>
+                </div>
+                <span class="progress-value">Reset kuota setiap hari</span>
             @endif
-        </article>
+        </aside>
     </section>
 
     <section class="cards">
         <article class="card">
-            <strong>🚀 Manfaat Lainnya</strong>
-            <p>✓ Respons cepat dari AI Tutor<br>
-            ✓ Cocok untuk mempersiapkan ujian<br>
-            ✓ Bantu memahami konsep sulit<br>
-            ✓ Latihan soal dan pembahasan<br>
-            ✓ Akses kapan saja, di mana saja</p>
+            <strong>Akun Gratis</strong>
+            <p>Gunakan 7 pertanyaan harian untuk bertanya tentang materi, sub bab, atau hasil kuis.</p>
+        </article>
+        <article class="card">
+            <strong>Akses Unlimited</strong>
+            <p>Tanya AI kapan saja tanpa batasan harian setelah pembayaran disetujui admin.</p>
+        </article>
+        <article class="card">
+            <strong>Belajar Berbasis Kuis</strong>
+            <p>AI dapat memakai hasil kuis terbaru untuk membantu membahas konsep yang masih belum pas.</p>
         </article>
     </section>
 
-    @if (!$user->hasUnlimitedAiAccess() && !$user->hasRequestedAiPayment())
-        <div class="meta" style="text-align: center;">
-            <p style="margin: 0 0 16px; color: #5a6f69;">Siap untuk upgrade? Klik tombol di atas atau ikuti proses pembayaran lengkap di halaman upgrade.</p>
+    <section class="meta">
+        <div class="section-title">
+            <div>
+                <strong>Manfaat AI Tutor</strong>
+                <p>Fitur ini dirancang untuk membantu proses belajar harian tanpa menggantikan guru.</p>
+            </div>
+        </div>
+        <ul class="feature-list">
+            <li>Respons cepat untuk pertanyaan tentang materi dan latihan soal.</li>
+            <li>Pembahasan jawaban salah dengan penjelasan yang lebih pelan dan terarah.</li>
+            <li>Cocok untuk mengulang konsep sebelum kuis atau ujian.</li>
+            <li>Bisa digunakan dari konteks materi, sub bab, maupun hasil kuis.</li>
+        </ul>
+    </section>
+
+    @if (! $user->hasUnlimitedAiAccess() && ! $user->hasRequestedAiPayment())
+        <div class="meta stack">
+            <strong>Siap Upgrade?</strong>
+            <p class="muted-note">Lanjut ke halaman pembayaran untuk melihat QR dan mengirim nama pengirim transfer.</p>
             <a class="btn btn-primary" href="{{ route('siswa.ai.payment') }}">Lihat Detail Pembayaran & Upgrade</a>
         </div>
     @endif
 @endsection
-
