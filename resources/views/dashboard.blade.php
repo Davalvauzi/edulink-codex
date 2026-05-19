@@ -40,7 +40,7 @@
         @endforeach
     </section>
 
-    @if ($role === 'siswa' && isset($user))
+    {{-- @if ($role === 'siswa' && isset($user))
         <section class="cards">
             <article class="card">
                 <strong>Tanya AI Tutor</strong>
@@ -48,7 +48,7 @@
                 <a class="btn btn-primary" href="{{ route('siswa.ai.index') }}">Buka Tanya AI</a>
             </article>
         </section>
-    @endif
+    @endif --}}
 
     @if ($role === 'siswa' && isset($totalSubsections))
         <section class="meta">
