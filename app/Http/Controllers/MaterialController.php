@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -60,6 +62,28 @@ class MaterialController extends Controller
             'quizzes' => fn ($query) => $query->withCount('questions')->with('creator'),
         ]);
 
+        $completedQuizzes = 0;
+        $learningProgressPercentage = 0;
+
+        if ($user->role === 'siswa') {
+            $material->quizzes->each(function (Quiz $quiz) use ($user) {
+                $quiz->latest_attempt = QuizAttempt::query()
+                    ->where('quiz_id', $quiz->id)
+                    ->where('user_id', $user->id)
+                    ->latest('submitted_at')
+                    ->latest('id')
+                    ->first();
+            });
+
+            $completedQuizzes = $material->quizzes
+                ->filter(fn (Quiz $quiz) => $quiz->latest_attempt !== null)
+                ->count();
+
+            $learningProgressPercentage = $material->quizzes->isNotEmpty()
+                ? (int) round(($completedQuizzes / $material->quizzes->count()) * 100)
+                : 0;
+        }
+
         return view('materials.show', [
             'title' => $material->title,
             'role' => $user->role,
@@ -67,6 +91,9 @@ class MaterialController extends Controller
             'subject' => $subject,
             'material' => $material,
             'quizzes' => $material->quizzes,
+            'completedLearningQuizzes' => $completedQuizzes,
+            'totalLearningQuizzes' => $material->quizzes->count(),
+            'learningProgressPercentage' => $learningProgressPercentage,
         ]);
     }
 

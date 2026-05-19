@@ -187,6 +187,11 @@
             color: var(--success-text);
         }
 
+        .alert.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
         .topbar {
             display: flex;
             justify-content: space-between;
@@ -971,6 +976,98 @@
             line-height: 1.5;
         }
 
+        .ai-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .ai-hero-copy {
+            display: grid;
+            gap: 16px;
+        }
+
+        .ai-hero-copy h2 {
+            margin: 0;
+            font-size: 26px;
+            line-height: 1.2;
+        }
+
+        .ai-hero-copy p,
+        .ai-status-card p,
+        .payment-copy p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .ai-status-card {
+            display: grid;
+            gap: 14px;
+            align-content: start;
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: #fffdfa;
+        }
+
+        .ai-quota-value {
+            margin: 0;
+            font-size: 34px;
+            line-height: 1;
+        }
+
+        .feature-list {
+            display: grid;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .qr-panel {
+            display: grid;
+            gap: 14px;
+            place-items: center;
+            text-align: center;
+        }
+
+        .qr-frame {
+            width: min(100%, 340px);
+            padding: 16px;
+            border-radius: 22px;
+            border: 1px solid var(--line);
+            background: #fff;
+        }
+
+        .qr-frame img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .payment-copy {
+            display: grid;
+            gap: 16px;
+        }
+
         .error-list {
             margin: 0 0 18px;
             padding: 14px 16px 14px 32px;
@@ -992,6 +1089,8 @@
             .subsection-grid,
             .quiz-grid,
             .info-strip,
+            .ai-hero,
+            .payment-grid,
             .option-grid,
             .question-form-grid {
                 grid-template-columns: 1fr;
@@ -1062,7 +1161,7 @@
                             <span>Lihat latihan soal dan hasilnya</span>
                         </a>
                         @if ($role === 'siswa')
-                            <a class="{{ request()->routeIs('siswa.ai.index') ? 'active' : '' }}"
+                            <a class="{{ request()->routeIs('siswa.ai.*') ? 'active' : '' }}"
                                 href="{{ route('siswa.ai.index') }}">
                                 Tingkatkan AI Kamu
                                 <span>Optimalkan penggunaan AI untuk belajar lebih efektif</span>

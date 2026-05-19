@@ -50,24 +50,24 @@
         </section>
     @endif --}}
 
-    @if ($role === 'siswa' && isset($totalSubsections))
+    @if ($role === 'siswa' && isset($totalLearningQuizzes))
         <section class="meta">
             <div class="section-title">
                 <div>
                     <strong>Progress Pembelajaran</strong>
-                    <p>Progress belajar siswa diringkas dari sub bab yang sudah dibuka pada kelas yang sedang dipilih.</p>
+                    <p>Progress belajar dihitung dari kuis yang sudah dikerjakan pada kelas yang sedang dipilih.</p>
                 </div>
             </div>
 
             <div class="progress-panel">
                 <div>
-                    <strong>{{ $completedSubsections }} dari {{ $totalSubsections }} sub bab selesai</strong>
-                    <p>Progress keseluruhan untuk {{ strtolower(\App\Models\User::kelasLabel($selectedKelas)) }} saat ini {{ $progressPercentage }}%.</p>
+                    <strong>{{ $completedLearningQuizzes }} dari {{ $totalLearningQuizzes }} kuis selesai</strong>
+                    <p>Progress keseluruhan untuk {{ strtolower(\App\Models\User::kelasLabel($selectedKelas)) }} saat ini {{ $learningProgressPercentage }}%.</p>
                 </div>
                 <div class="progress-track">
-                    <div class="progress-fill" style="width: {{ $progressPercentage }}%;"></div>
+                    <div class="progress-fill" style="width: {{ $learningProgressPercentage }}%;"></div>
                 </div>
-                <span class="progress-value">{{ $progressPercentage }}%</span>
+                <span class="progress-value">{{ $learningProgressPercentage }}%</span>
             </div>
         </section>
     @endif

@@ -71,6 +71,28 @@
         </div>
     </section>
 
+    @if ($role === 'siswa')
+        <section class="meta">
+            <div class="section-title">
+                <div>
+                    <strong>Progress Pembelajaran</strong>
+                    <p>Progress materi ini otomatis terisi setelah kuis selesai dikerjakan.</p>
+                </div>
+            </div>
+
+            <div class="progress-panel">
+                <div>
+                    <strong>{{ $completedLearningQuizzes }} dari {{ $totalLearningQuizzes }} kuis selesai</strong>
+                    <p>{{ $learningProgressPercentage }}% progress untuk materi {{ $material->title }}.</p>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: {{ $learningProgressPercentage }}%;"></div>
+                </div>
+                <span class="progress-value">{{ $learningProgressPercentage }}%</span>
+            </div>
+        </section>
+    @endif
+
     <section class="meta">
         <div class="section-title">
             <div>
@@ -93,6 +115,13 @@
                             <h3>{{ $quiz->title }}</h3>
                             <p>{{ $quiz->description ?: 'Kuis pilihan ganda untuk mengukur pemahaman siswa pada materi ini.' }}</p>
                             <p class="material-summary">{{ $quiz->questions_count }} soal tersedia. Dibuat oleh {{ $quiz->creator?->name ?? 'guru' }}.</p>
+                            @if ($role === 'siswa')
+                                @if ($quiz->latest_attempt)
+                                    <span class="status-badge done">Selesai - Skor {{ $quiz->latest_attempt->score }}</span>
+                                @else
+                                    <span class="status-badge pending">Belum dikerjakan</span>
+                                @endif
+                            @endif
                         </div>
 
                         <div class="subsection-actions">

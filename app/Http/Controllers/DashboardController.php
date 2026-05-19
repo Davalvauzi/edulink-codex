@@ -87,7 +87,12 @@ class DashboardController extends Controller
         $completedQuizzes = QuizAttempt::query()
             ->where('user_id', $user->id)
             ->whereHas('quiz.material.subject', fn($query) => $query->where('kelas', $selectedKelas))
-            ->count();
+            ->distinct('quiz_id')
+            ->count('quiz_id');
+
+        $progressPercentage = $availableQuizzes > 0
+            ? (int) round(($completedQuizzes / $availableQuizzes) * 100)
+            : 0;
 
         return view('dashboard', [
             'title' => 'Dashboard Siswa',
@@ -96,10 +101,13 @@ class DashboardController extends Controller
             'user' => $user,
             'subjects' => $subjects,
             'selectedKelas' => $selectedKelas,
+            'totalLearningQuizzes' => $availableQuizzes,
+            'completedLearningQuizzes' => $completedQuizzes,
+            'learningProgressPercentage' => $progressPercentage,
             'dashboardStats' => [
                 ['label' => 'Materi Aktif', 'value' => $availableMaterials, 'detail' => 'Bab utama tersedia'],
                 ['label' => 'Kuis Tersedia', 'value' => $availableQuizzes, 'detail' => 'Bisa dibuka dari menu Kuis'],
-                ['label' => 'Kuis Selesai', 'value' => $completedQuizzes, 'detail' => 'Attempt yang sudah dikirim'],
+                ['label' => 'Kuis Selesai', 'value' => $completedQuizzes, 'detail' => 'Kuis unik yang sudah dikirim'],
             ],
             'progressHighlights' => [
                 ['title' => 'Materi Belajar', 'description' => 'Buka menu Materi untuk langsung menuju Bahasa Inggris.'],

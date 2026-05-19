@@ -43,6 +43,15 @@
                         <h3>{{ $material->title }}</h3>
                         <p>{{ \Illuminate\Support\Str::limit(strip_tags($material->description), 140) }}</p>
 
+                        @if ($role === 'siswa')
+                            <div class="inline-progress">
+                                <div class="progress-track compact">
+                                    <div class="progress-fill" style="width: {{ $material->learning_progress_percentage }}%;"></div>
+                                </div>
+                                <span class="progress-value">{{ $material->learning_progress_percentage }}% selesai</span>
+                            </div>
+                        @endif
+
                         <div class="material-meta">
                             <div>
                                 <span>Diunggah oleh</span>
