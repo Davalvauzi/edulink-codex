@@ -37,6 +37,14 @@
             <p>{{ $attempt->user->name }}</p>
         </div>
         <div class="box">
+            <strong>Email</strong>
+            <p>{{ $attempt->user->email }}</p>
+        </div>
+        <div class="box">
+            <strong>Kelas</strong>
+            <p>{{ $attempt->user?->kelas ? \App\Models\User::kelasLabel($attempt->user->kelas) : '-' }}</p>
+        </div>
+        <div class="box">
             <strong>Skor</strong>
             <p>{{ $attempt->score }} ({{ $attempt->correct_answers }}/{{ $attempt->total_questions }})</p>
         </div>

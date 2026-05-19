@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Models\MaterialSubsection;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class MaterialController extends Controller
@@ -28,18 +30,20 @@ class MaterialController extends Controller
         abort_if($request->user()->role !== 'guru', 403);
 
         $data = $this->validateMaterial($request);
-        [$imagePath, $imageName] = $this->storeUploadedImage($request);
+
         [$filePath, $fileName] = $this->storeUploadedFile($request);
+        $thumbnailPath = $this->storeThumbnail($request);
 
         $material = Material::query()->create([
-            'subject_id' => $subject->id,
-            'title' => $data['title'],
-            'description' => $this->sanitizeDescription($data['description']),
-            'image_path' => $imagePath,
-            'image_name' => $imageName,
-            'file_path' => $filePath,
-            'file_name' => $fileName,
-            'created_by' => $request->user()->id,
+            'subject_id'  => $subject->id,
+            'title'       => $data['title'],
+            'topic'       => $data['topic'] ?? null,
+            'duration'    => $data['duration'] ?? null,
+            'thumbnail'   => $thumbnailPath,
+            'description' => $data['description'],
+            'file_path'   => $filePath,
+            'file_name'   => $fileName,
+            'created_by'  => $request->user()->id,
         ]);
 
         return redirect()
@@ -58,15 +62,29 @@ class MaterialController extends Controller
             'creator',
             'subject.creator',
             'quizzes' => fn ($query) => $query->withCount('questions')->with('creator'),
+            'subsections' => fn ($query) => $query->with(
+                $user->role === 'siswa'
+                    ? ['creator', 'progressRecords' => fn ($progressQuery) => $progressQuery->where('user_id', $user->id)]
+                    : ['creator', 'progressRecords']
+            ),
         ]);
 
+        [$completedSubsections, $progressPercentage, $subsections] = $this->buildProgressSummary(
+            $material->subsections,
+            $user->role === 'siswa'
+        );
+
         return view('materials.show', [
-            'title' => $material->title,
-            'role' => $user->role,
-            'user' => $user,
-            'subject' => $subject,
-            'material' => $material,
-            'quizzes' => $material->quizzes,
+            'title'               => $material->title,
+            'role'                => $user->role,
+            'user'                => $user,
+            'subject'             => $subject,
+            'material'            => $material,
+            'quizzes'             => $material->quizzes,
+            'subsections'         => $subsections,
+            'completedSubsections' => $completedSubsections,
+            'totalSubsections'    => $material->subsections->count(),
+            'progressPercentage'  => $progressPercentage,
         ]);
     }
 
@@ -76,10 +94,10 @@ class MaterialController extends Controller
         $this->ensureMaterialBelongsToSubject($subject, $material);
 
         return view('materials.edit', [
-            'title' => 'Edit Materi',
-            'role' => $request->user()->role,
-            'user' => $request->user(),
-            'subject' => $subject,
+            'title'    => 'Edit Materi',
+            'role'     => $request->user()->role,
+            'user'     => $request->user(),
+            'subject'  => $subject,
             'material' => $material,
         ]);
     }
@@ -91,16 +109,17 @@ class MaterialController extends Controller
 
         $data = $this->validateMaterial($request);
 
-        [$imagePath, $imageName] = $this->replaceUploadedImage($request, $material);
         [$filePath, $fileName] = $this->replaceUploadedFile($request, $material);
+        $thumbnailPath = $this->replaceThumbnail($request, $material);
 
         $material->update([
-            'title' => $data['title'],
-            'description' => $this->sanitizeDescription($data['description']),
-            'image_path' => $imagePath,
-            'image_name' => $imageName,
-            'file_path' => $filePath,
-            'file_name' => $fileName,
+            'title'       => $data['title'],
+            'topic'       => $data['topic'] ?? null,
+            'duration'    => $data['duration'] ?? null,
+            'thumbnail'   => $thumbnailPath,
+            'description' => $data['description'],
+            'file_path'   => $filePath,
+            'file_name'   => $fileName,
         ]);
 
         return redirect()
@@ -117,8 +136,8 @@ class MaterialController extends Controller
             Storage::disk('public')->delete($material->file_path);
         }
 
-        if ($material->image_path) {
-            Storage::disk('public')->delete($material->image_path);
+        if ($material->thumbnail) {
+            Storage::disk('public')->delete($material->thumbnail);
         }
 
         $material->delete();
@@ -128,41 +147,18 @@ class MaterialController extends Controller
             ->with('success', 'Materi berhasil dihapus.');
     }
 
+    // ─── Private helpers ──────────────────────────────────────────────────────
+
     private function validateMaterial(Request $request): array
     {
         return $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title'       => ['required', 'string', 'max:255'],
+            'topic'       => ['nullable', 'string', 'max:100'],
+            'duration'    => ['nullable', 'string', 'max:50'],
             'description' => ['required', 'string'],
-            'image_file' => ['nullable', 'file', 'image', 'max:4096'],
-            'file' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            'file'        => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            'thumbnail'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
-    }
-
-    private function storeUploadedImage(Request $request): array
-    {
-        if (! $request->hasFile('image_file')) {
-            return [null, null];
-        }
-
-        $uploadedFile = $request->file('image_file');
-
-        return [
-            $uploadedFile->store('material-images', 'public'),
-            $uploadedFile->getClientOriginalName(),
-        ];
-    }
-
-    private function replaceUploadedImage(Request $request, Material $material): array
-    {
-        if (! $request->hasFile('image_file')) {
-            return [$material->image_path, $material->image_name];
-        }
-
-        if ($material->image_path) {
-            Storage::disk('public')->delete($material->image_path);
-        }
-
-        return $this->storeUploadedImage($request);
     }
 
     private function storeUploadedFile(Request $request): array
@@ -191,14 +187,59 @@ class MaterialController extends Controller
 
         return $this->storeUploadedFile($request);
     }
+
+    private function storeThumbnail(Request $request): ?string
+    {
+        if (! $request->hasFile('thumbnail')) {
+            return null;
+        }
+
+        return $request->file('thumbnail')->store('thumbnails', 'public');
+    }
+
+    private function replaceThumbnail(Request $request, Material $material): ?string
+    {
+        if (! $request->hasFile('thumbnail')) {
+            return $material->thumbnail;
+        }
+
+        if ($material->thumbnail) {
+            Storage::disk('public')->delete($material->thumbnail);
+        }
+
+        return $this->storeThumbnail($request);
+    }
+
     private function ensureMaterialBelongsToSubject(Subject $subject, Material $material): void
     {
         abort_if($material->subject_id !== $subject->id, 404);
     }
 
+    private function buildProgressSummary(Collection $subsections, bool $forStudent): array
+    {
+        $mappedSubsections = $subsections->map(function (MaterialSubsection $subsection) use ($forStudent) {
+            $subsection->is_completed = $forStudent
+                ? $subsection->progressRecords->isNotEmpty()
+                : false;
+
+            $subsection->completed_students_count = $forStudent
+                ? 0
+                : $subsection->progressRecords->whereNotNull('completed_at')->count();
+
+            return $subsection;
+        });
+
+        $completedSubsections = $mappedSubsections->where('is_completed', true)->count();
+        $progressPercentage   = $mappedSubsections->isNotEmpty()
+            ? (int) round(($completedSubsections / $mappedSubsections->count()) * 100)
+            : 0;
+
+        return [$completedSubsections, $progressPercentage, $mappedSubsections];
+    }
+
     private function sanitizeDescription(string $html): string
     {
-        $allowed = '<p><div><br><strong><b><em><i><u><h1><h2><h3><ul><ol><li><blockquote>';
+        $allowed   = '<p><div><br><strong><b><em><i><u><h1><h2><h3><ul><ol><li><blockquote>';
         $sanitized = strip_tags($html, $allowed);
         $sanitized = preg_replace('/<(\/?)div>/', '<$1p>', $sanitized) ?? $sanitized;
 
