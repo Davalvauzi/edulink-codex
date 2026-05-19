@@ -57,6 +57,7 @@ class User extends Authenticatable
             'ai_tutor_paid_at' => 'datetime',
             'ai_tutor_payment_requested_at' => 'datetime',
             'ai_tutor_payment_sender_name' => 'string',
+            'ai_tutor_messages_used' => 'integer',
         ];
     }
 
@@ -78,12 +79,7 @@ class User extends Authenticatable
             return PHP_INT_MAX;
         }
 
-        $used = AiMessage::query()
-            ->where('role', 'assistant')
-            ->whereHas('conversation', fn ($query) => $query->where('user_id', $this->id))
-            ->count();
-
-        return max(0, $limit - $used);
+        return max(0, $limit - $this->ai_tutor_messages_used);
     }
 
     public function subjects(): HasMany

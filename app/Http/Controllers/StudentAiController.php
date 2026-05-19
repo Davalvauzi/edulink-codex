@@ -37,13 +37,8 @@ class StudentAiController extends Controller
 
         if (! $request->user()->hasUnlimitedAiAccess()) {
             $limit = config('ai.unpaid_chat_limit', 5);
-            $used = AiMessage::query()
-                ->where('role', 'assistant')
-                ->whereHas('conversation', fn ($query) => $query->where('user_id', $request->user()->id))
-                ->count();
-
-            $remainingChats = max(0, $limit - $used);
-            $hasReachedLimit = $used >= $limit;
+            $remainingChats = $request->user()->remainingAiChats();
+            $hasReachedLimit = $request->user()->ai_tutor_messages_used >= $limit;
         }
 
         $conversation = AiConversation::query()
@@ -128,7 +123,7 @@ class StudentAiController extends Controller
             $conversation->load('messages');
             $assistantReply = $this->tutor->reply($conversation);
 
-            DB::transaction(function () use ($conversation, $assistantReply) {
+            DB::transaction(function () use ($conversation, $assistantReply, $user) {
                 $conversation->messages()->create([
                     'role' => 'assistant',
                     'content' => $assistantReply['content'],
@@ -137,6 +132,11 @@ class StudentAiController extends Controller
                     'completion_tokens' => $assistantReply['completion_tokens'],
                     'total_tokens' => $assistantReply['total_tokens'],
                 ]);
+
+                // Increment permanent message counter for unpaid users
+                if (! $user->hasUnlimitedAiAccess()) {
+                    $user->increment('ai_tutor_messages_used');
+                }
             });
         } catch (\Throwable $exception) {
             return redirect()
